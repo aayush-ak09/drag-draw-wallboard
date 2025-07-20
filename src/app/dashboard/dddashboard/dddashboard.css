@@ -1,0 +1,129 @@
+.grid-stack {
+  background: #fff;
+  height: 100vh;
+}
+
+/* Keep your original deep-styled grid item content */
+::ng-deep .grid-stack-item-content {
+  background: #3e3e3e;
+  color: white;
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+  border-radius: 8px;
+}
+
+/* Widget body layout improvements */
+.grid-stack-item-content {
+  position: relative;
+  flex-direction: column;
+  padding: 10px;
+  height: 100%;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+  display: flex;
+}
+
+/* Show shadow on hover */
+.grid-stack-item-content:hover {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Toolbar shown only on hover */
+.widget-toolbar {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: none;
+  z-index: 10;
+}
+
+.grid-stack-item-content:hover .widget-toolbar {
+  display: block;
+}
+
+
+
+.widget-toolbar .choose-data-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.choose-data-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Widget inner body */
+.widget-body {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  text-align: center;
+}
+
+/* Table styling inside widget */
+.widget-body table {
+  width: 100%;
+  border-collapse: collapse;
+  color: white;
+  font-size: 12px;
+}
+
+.widget-body th,
+.widget-body td {
+  border: 1px solid #999;
+  padding: 6px;
+  text-align: center;
+}
+
+/* Modal overlay */
+.data-picker-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal content */
+.data-picker-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.data-picker-content h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.data-picker-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.data-picker-content li {
+  margin: 6px 0;
+  cursor: pointer;
+  color: #007bff;
+}
+
+.data-picker-content li:hover {
+  text-decoration: underline;
+}

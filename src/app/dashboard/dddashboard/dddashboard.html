@@ -1,0 +1,37 @@
+
+<div class="control-center" *ngIf="drawModeONN">
+    <button (click)="addWidget()" style="margin: 10px;">Add Widget</button>
+    <button (click)="saveLayout()">💾 Save Layout</button>
+    <button (click)="showLayout()">Preview</button>
+</div>
+
+<div *ngIf="!drawModeONN">
+    <button (click)="saveLayout()">💾 Save Layout</button>
+</div>
+
+<div #gridContainer class="grid-stack"></div>
+
+
+<!-- Data Picker Modal -->
+<div class="data-picker-modal" *ngIf="showDataPicker">
+  <div class="data-picker-content">
+    <h3>Select Data</h3>
+
+    <label>Stats:</label>
+    <ul>
+      <li *ngFor="let stat of templateInput.Stats" (click)="selectStat(stat)">
+        {{ stat[0] }} — {{ stat[1] }}
+      </li>
+    </ul>
+
+    <label>Tables:</label>
+    <ul>
+      <li *ngFor="let key of tableKeys()" (click)="selectTable(key)">
+        {{ key }}
+      </li>
+    </ul>
+
+    
+    <button (click)="closeDataPicker()">Cancel</button>
+  </div>
+</div>
