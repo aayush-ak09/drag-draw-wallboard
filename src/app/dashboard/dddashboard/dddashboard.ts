@@ -1,13 +1,14 @@
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { GridStack, GridStackOptions, GridStackWidget } from 'gridstack';
 import { CommonModule } from '@angular/common';
+import { GraphComponent} from '../graph-component/graph-component'
 
 @Component({
   selector: 'app-dddashboard',
   standalone: true,
   templateUrl: './dddashboard.html',
   styleUrls: ['./dddashboard.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, GraphComponent]
 })
 export class DDdashboard implements AfterViewInit {
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
@@ -57,6 +58,7 @@ export class DDdashboard implements AfterViewInit {
     <button class="delete-widget-btn">🗑️</button>
   </div>
   <div class="widget-body">
+  <app-graph-component></app-graph-component>
     <p>Drop content here...</p>
   </div>
 `;
