@@ -1,1 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
+.widget-toolbar {
+  background-color: #4e4e4e;
+  color: white;
+  padding: 5px 10px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.widget-body {
+  padding: 10px;
+  background: #000000;
+  border-top: 1px solid #ccc;
+}
+

@@ -1,37 +1,93 @@
-
 <div class="control-center" *ngIf="drawModeONN">
-    <button (click)="addWidget()" style="margin: 10px;">Add Widget</button>
-    <button (click)="saveLayout()">💾 Save Layout</button>
-    <button (click)="showLayout()">Preview</button>
+  <button (click)="addWidget()" style="margin: 10px;">Add Widget</button>
+  <button (click)="saveLayout()">💾 Save Layout</button>
+  <button (click)="showLayout()">Preview</button>
 </div>
 
 <div *ngIf="!drawModeONN">
-    <button (click)="saveLayout()">💾 Save Layout</button>
+  <button (click)="saveLayout()">💾 Save Layout</button>
 </div>
 
 <div #gridContainer class="grid-stack"></div>
 
-
 <!-- Data Picker Modal -->
 <div class="data-picker-modal" *ngIf="showDataPicker">
   <div class="data-picker-content">
-    <h3>Select Data</h3>
+    <div class="tabs">
+      <button [class.active]="activeTab === 'data'" (click)="activeTab = 'data'">Select Data</button>
+      <button [class.active]="activeTab === 'design'" (click)="activeTab = 'design'">Custom Design</button>
+    </div>
 
-    <label>Stats:</label>
-    <ul>
-      <li *ngFor="let stat of templateInput.Stats" (click)="selectStat(stat)">
-        {{ stat[0] }} — {{ stat[1] }}
-      </li>
-    </ul>
+    <!-- Select Data Tab -->
+    <div *ngIf="activeTab === 'data'" class="tab-content">
+      <h3>Select Data</h3>
 
-    <label>Tables:</label>
-    <ul>
-      <li *ngFor="let key of tableKeys()" (click)="selectTable(key)">
-        {{ key }}
-      </li>
-    </ul>
+      <label>Stats:</label>
+      <ul>
+        <li *ngFor="let stat of templateInput.Stats" (click)="selectStat(stat)">
+          {{ stat[0] }} — {{ stat[1] }}
+        </li>
+      </ul>
 
-    
+      <label>Tables:</label>
+      <ul>
+        <li *ngFor="let key of tableKeys()" (click)="selectTable(key)">
+          {{ key }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Custom Design Tab -->
+   <div *ngIf="activeTab === 'design'" class="custom-design">
+  <h2>Custom Design</h2>
+
+  <div class="form-row">
+    <label>Background Color:</label>
+    <input type="color" [(ngModel)]="design.bgColor" />
+    <label>Text Color:</label>
+    <input type="color" [(ngModel)]="design.textColor" />
+  </div>
+
+  <div class="form-row">
+    <label>Text Alignment:</label>
+    <select [(ngModel)]="design.textAlign">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label>Font Type:</label>
+    <select [(ngModel)]="design.fontFamily">
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Georgia">Georgia</option>
+    </select>
+    <label>Font Size:</label>
+    <input type="number" [(ngModel)]="design.fontSize" style="width: 60px;" /> px
+  </div>
+
+  <div class="form-row preview-box" 
+       [ngStyle]="{
+         'background-color': design.bgColor,
+         'color': design.textColor,
+         'text-align': design.textAlign,
+         'font-family': design.fontFamily,
+         'font-size.px': design.fontSize
+       }">
+    This is a preview
+  </div>
+
+  <div class="form-row">
+    <button (click)="applyCustomDesign()">Apply</button>
     <button (click)="closeDataPicker()">Cancel</button>
   </div>
+</div>
+
+
+
+<div *ngIf="false">
+  <app-graph-component></app-graph-component>
 </div>

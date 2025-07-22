@@ -1,16 +1,27 @@
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { GridStack, GridStackOptions, GridStackWidget } from 'gridstack';
 import { CommonModule } from '@angular/common';
-import { GraphComponent} from '../graph-component/graph-component'
+import { GraphComponent } from '../graph-component/graph-component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dddashboard',
   standalone: true,
   templateUrl: './dddashboard.html',
   styleUrls: ['./dddashboard.css'],
-  imports: [CommonModule, GraphComponent]
+  imports: [CommonModule, GraphComponent, FormsModule]
 })
 export class DDdashboard implements AfterViewInit {
+  activeTab: 'data' | 'design' = 'data';
+
+  design = {
+    bgColor: '#ffffff',
+    textColor: '#000000',
+    textAlign: 'left',
+    fontFamily: 'Arial',
+    fontSize: 16
+  };
+
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
   drawModeONN: boolean = true;
   private grid!: GridStack;
@@ -23,20 +34,52 @@ export class DDdashboard implements AfterViewInit {
       column: 12
     };
 
-
-
-
+    // Initialize the grid
     this.grid = GridStack.init(options, this.gridContainer.nativeElement);
-    if (this.grid) {
 
-      this.grid.addWidget({
-        x: 0,
-        y: 0,
-        w: 3,
-        h: 2,
-        content: 'My Widget'
-      });
-    }
+    // Create the widget container
+    const el = document.createElement('div');
+    el.classList.add('grid-stack-item');
+    el.setAttribute('gs-x', '0');
+    el.setAttribute('gs-y', '0');
+    el.setAttribute('gs-w', '3');
+    el.setAttribute('gs-h', '2');
+
+    // Create the widget content
+    const content = document.createElement('div');
+    content.classList.add('grid-stack-item-content');
+    content.innerHTML = `
+    <div class="widget-toolbar">
+      <button class="choose-data-btn">Choose Data</button>
+      <button class="delete-widget-btn">🗑️</button>
+    </div>
+    <div class="widget-body">
+      <app-graph-component></app-graph-component>
+      <p>Drop content here...</p>
+    </div>
+  `;
+
+    // Append content to the element
+    el.appendChild(content);
+
+    // Add to grid
+    this.grid.addWidget(el);
+
+    // Optional: Attach events after widget is rendered
+    setTimeout(() => {
+      const chooseButton = el.querySelector('.choose-data-btn');
+      const deleteButton = el.querySelector('.delete-widget-btn');
+
+      if (chooseButton) {
+        chooseButton.addEventListener('click', () => this.openDataPicker(el));
+      }
+
+      if (deleteButton) {
+        deleteButton.addEventListener('click', () => {
+          this.grid.removeWidget(el);
+        });
+      }
+    });
   }
 
   addWidget(): void {
@@ -66,20 +109,30 @@ export class DDdashboard implements AfterViewInit {
     this.gridContainer.nativeElement.appendChild(widget);
     this.grid.makeWidget(widget);
 
-    // Attach click event
     setTimeout(() => {
-      const button = widget.querySelector('.choose-data-btn');
-      if (button) {
-        button.addEventListener('click', () => this.openDataPicker(widget));
+      const chooseButton = widget.querySelector('.choose-data-btn');
+      const deleteButton = widget.querySelector('.delete-widget-btn');
+
+      if (chooseButton) {
+        chooseButton.addEventListener('click', () => this.openDataPicker(widget));
+      }
+
+      if (deleteButton) {
+        deleteButton.addEventListener('click', () => {
+          widget.remove();
+        });
       }
     });
+
   }
-  
+
 
   saveLayout(): void {
     const widgets = this.grid.engine.nodes.map(node => {
       const el = node.el!;
-      const contentEl = el.querySelector('.widget-body');
+      const contentEl = el.querySelector('.widget-body') as HTMLElement;
+      const style = window.getComputedStyle(contentEl);
+
       const content = contentEl ? contentEl.innerHTML : '';
 
       return {
@@ -87,13 +140,21 @@ export class DDdashboard implements AfterViewInit {
         y: node.y,
         w: node.w,
         h: node.h,
-        content
+        content,
+        style: {
+          bgColor: style.backgroundColor,
+          textColor: style.color,
+          textAlign: style.textAlign,
+          fontFamily: style.fontFamily,
+          fontSize: style.fontSize
+        }
       };
     });
 
     localStorage.setItem('my-dashboard-layout', JSON.stringify(widgets));
-    console.log('Layout with content saved:', widgets);
+    console.log('Layout with content + style saved:', widgets);
   }
+
 
   showLayout(): void {
     this.drawModeONN = false;
@@ -117,16 +178,27 @@ export class DDdashboard implements AfterViewInit {
         widget.setAttribute('gs-w', item.w);
         widget.setAttribute('gs-h', item.h);
 
+        const style = item.style || {};
+
         const content = document.createElement('div');
         content.classList.add('grid-stack-item-content');
         content.innerHTML = `
-      <div class="completebox">
-        <div class="widget-toolbar">
-          <button class="choose-data-btn">Choose Data</button>
-        </div>
-        <div style="display: flex; align-items: center; justify-content: center;">
-        ${item.content}
-        </div>
+        <div class="completebox">
+          <div class="widget-toolbar">
+            <button class="choose-data-btn">Choose Data</button>
+          </div>
+          <div 
+            class="widget-body" 
+            style="
+              background-color: ${style.bgColor || 'white'};
+              color: ${style.textColor || 'black'};
+              text-align: ${style.textAlign || 'left'};
+              font-family: ${style.fontFamily || 'Arial'};
+              font-size: ${style.fontSize || '16px'};
+              display: flex; align-items: center; justify-content: center;"
+          >
+            ${item.content}
+          </div>
         </div>
       `;
 
@@ -134,7 +206,6 @@ export class DDdashboard implements AfterViewInit {
         this.gridContainer.nativeElement.appendChild(widget);
         this.grid.makeWidget(widget);
 
-        // Reattach event
         setTimeout(() => {
           const btn = widget.querySelector('.choose-data-btn');
           if (btn) {
@@ -147,6 +218,7 @@ export class DDdashboard implements AfterViewInit {
 
 
 
+
   selectedWidgetEl: HTMLElement | null = null;
   showDataPicker = false;
 
@@ -156,13 +228,13 @@ export class DDdashboard implements AfterViewInit {
   }
 
   deleteLayout(): void {
-  const confirmed = confirm('Are you sure you want to delete this layout?');
-  if (confirmed) {
-    localStorage.removeItem('my-dashboard-layout');
-    this.grid.removeAll(false);
-    console.log('Layout deleted.');
+    const confirmed = confirm('Are you sure you want to delete this layout?');
+    if (confirmed) {
+      localStorage.removeItem('my-dashboard-layout');
+      this.grid.removeAll(false);
+      console.log('Layout deleted.');
+    }
   }
-}
 
 
 
@@ -264,6 +336,20 @@ export class DDdashboard implements AfterViewInit {
       ]
     }
   };
+
+  applyCustomDesign(): void {
+    if (this.selectedWidgetEl) {
+      const body = this.selectedWidgetEl.querySelector('.widget-body') as HTMLElement;
+      if (body) {
+        body.style.backgroundColor = this.design.bgColor;
+        body.style.color = this.design.textColor;
+        body.style.textAlign = this.design.textAlign as CanvasTextAlign;
+        body.style.fontFamily = this.design.fontFamily;
+        body.style.fontSize = `${this.design.fontSize}px`;
+      }
+    }
+  }
+
 
 
 }

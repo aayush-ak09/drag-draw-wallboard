@@ -127,3 +127,85 @@
 .data-picker-content li:hover {
   text-decoration: underline;
 }
+
+.design-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.tab-header {
+  display: flex;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 15px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #eee;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #ccc;
+  border-bottom: 3px solid #333;
+}
+
+.design-body h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.form-group {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-group input,
+.form-group select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.preview-box {
+  margin: 15px 0;
+  padding: 12px;
+  border: 1px dashed #999;
+  border-radius: 6px;
+  min-height: 60px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #ccc;
+}
+
+.apply-btn {
+  background: #007bff;
+  color: white;
+}
