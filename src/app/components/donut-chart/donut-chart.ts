@@ -15,15 +15,13 @@ import {
   Legend
 } from 'chart.js';
 
-// ✅ Register the required chart elements/controllers
 Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
 
 @Component({
   selector: 'app-donut-chart',
   standalone: true,
-  imports: [],
   templateUrl: './donut-chart.html',
-  styleUrls: ['./donut-chart.css']  // ✅ fixed `styleUrls` instead of `styleUrl`
+  styleUrls: ['./donut-chart.css']
 })
 export class DonutChart implements AfterViewInit, OnDestroy {
   @ViewChild('donutCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -33,6 +31,7 @@ export class DonutChart implements AfterViewInit, OnDestroy {
   @Input() colors: string[] = [];
 
   chart!: Chart;
+  resizeObserver!: ResizeObserver;
 
   ngAfterViewInit(): void {
     this.chart = new Chart(this.canvasRef.nativeElement, {
@@ -46,6 +45,7 @@ export class DonutChart implements AfterViewInit, OnDestroy {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // Key for resizing to parent box
         plugins: {
           legend: {
             position: 'top'
@@ -53,11 +53,24 @@ export class DonutChart implements AfterViewInit, OnDestroy {
         }
       }
     });
+
+    // ✅ Observe size changes in parent container
+    const parent = this.canvasRef.nativeElement.parentElement;
+    if (parent) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.chart?.resize();
+      });
+      this.resizeObserver.observe(parent);
+    }
   }
 
   ngOnDestroy(): void {
+    // Clean up chart and observer
     if (this.chart) {
       this.chart.destroy();
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
     }
   }
 }

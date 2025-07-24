@@ -36,10 +36,8 @@ export class DDdashboard implements AfterViewInit {
       column: 12
     };
 
-    // Initialize the grid
     this.grid = GridStack.init(options, this.gridContainer.nativeElement);
 
-    // Create the widget container
     const el = document.createElement('div');
     el.classList.add('grid-stack-item');
     el.setAttribute('gs-x', '0');
@@ -47,33 +45,30 @@ export class DDdashboard implements AfterViewInit {
     el.setAttribute('gs-w', '3');
     el.setAttribute('gs-h', '2');
 
-    // Create the widget content
     const content = document.createElement('div');
     content.classList.add('grid-stack-item-content');
+
     const toolbar = document.createElement('div');
     toolbar.className = 'widget-toolbar';
     toolbar.innerHTML = `
-      <button class="choose-data-btn">Choose Data</button>
-      <button class="delete-widget-btn">🗑️</button>
-    `;
+    <button class="choose-data-btn">Choose Data</button>
+    <button class="delete-widget-btn">🗑️</button>
+  `;
 
     const body = document.createElement('div');
     body.className = 'widget-body';
     body.style.padding = '10px';
 
+    // Dynamically inject GraphComponent
     const compRef = this.viewContainerRef.createComponent(GraphComponent);
+    compRef.instance.apple = 'Injected from ngAfterViewInit';
     body.appendChild(compRef.location.nativeElement);
 
     content.appendChild(toolbar);
     content.appendChild(body);
-
-    // Append content to the element
     el.appendChild(content);
-
-    // Add to grid
     this.grid.makeWidget(el);
 
-    // Optional: Attach events after widget is rendered
     setTimeout(() => {
       const chooseButton = el.querySelector('.choose-data-btn');
       const deleteButton = el.querySelector('.delete-widget-btn');
@@ -81,18 +76,14 @@ export class DDdashboard implements AfterViewInit {
       if (chooseButton) {
         chooseButton.addEventListener('click', () => this.openDataPicker(el));
       }
-
       if (deleteButton) {
-        deleteButton.addEventListener('click', () => {
-          this.grid.removeWidget(el);
-        });
+        deleteButton.addEventListener('click', () => this.grid.removeWidget(el));
       }
     });
   }
 
-  addWidget(): void {
-    const count = this.grid.getGridItems().length;
 
+  addWidget(): void {
     const widget = document.createElement('div');
     widget.classList.add('grid-stack-item');
     widget.setAttribute('gs-x', '0');
@@ -106,14 +97,15 @@ export class DDdashboard implements AfterViewInit {
     const toolbar = document.createElement('div');
     toolbar.className = 'widget-toolbar';
     toolbar.innerHTML = `
-      <button class="choose-data-btn">Choose Data</button>
-      <button class="delete-widget-btn">🗑️</button>
-    `;
+    <button class="choose-data-btn">Choose Data</button>
+    <button class="delete-widget-btn">🗑️</button>
+  `;
 
     const body = document.createElement('div');
     body.className = 'widget-body';
     body.style.padding = '10px';
 
+    // Use DonutChart and set inputs
     const compRef = this.viewContainerRef.createComponent(DonutChart);
     compRef.instance.labels = ['Tech', 'Finance', 'Retail'];
     compRef.instance.values = [60, 25, 15];
@@ -133,14 +125,10 @@ export class DDdashboard implements AfterViewInit {
       if (chooseButton) {
         chooseButton.addEventListener('click', () => this.openDataPicker(widget));
       }
-
       if (deleteButton) {
-        deleteButton.addEventListener('click', () => {
-          widget.remove();
-        });
+        deleteButton.addEventListener('click', () => widget.remove());
       }
     });
-
   }
 
 

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, input } from '@angular/core';
 
 @Component({
   selector: 'app-graph-component',
@@ -7,5 +7,6 @@ import { Component } from '@angular/core';
   styleUrl: './graph-component.css'
 })
 export class GraphComponent {
+  @Input() apple!: string;
 
 }
