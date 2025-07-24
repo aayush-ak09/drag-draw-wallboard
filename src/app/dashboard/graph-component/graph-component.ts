@@ -7,6 +7,6 @@ import { Component, Input, input } from '@angular/core';
   styleUrl: './graph-component.css'
 })
 export class GraphComponent {
-  @Input() apple!: string;
+  @Input() name!: string;
 
 }

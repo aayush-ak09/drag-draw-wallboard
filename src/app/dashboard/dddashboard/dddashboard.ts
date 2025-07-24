@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { GraphComponent } from '../graph-component/graph-component';
 import { FormsModule } from '@angular/forms';
 import { DonutChart } from '../../components/donut-chart/donut-chart';
+import { GaugeChartComponent } from '../../components/gauge-chart/gauge-chart';
+import { JoyBigGaugeChartComponent } from '../../components/joy-big-gauge/joy-big-gauge-chart.component';
 
 @Component({
   selector: 'app-dddashboard',
@@ -20,8 +22,15 @@ export class DDdashboard implements AfterViewInit {
     textColor: '#000000',
     textAlign: 'left',
     fontFamily: 'Arial',
-    fontSize: 16
+    fontSize: 16,
+    chartType: 'donut'
   };
+
+  chartTypes = [
+  { value: 'donut', label: 'Donut Chart' },
+  { value: 'gauge', label: 'Simple Gauge' },
+  { value: 'biggauge', label: 'Big Gauge' }
+  ];
 
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
   drawModeONN: boolean = true;
@@ -61,7 +70,7 @@ export class DDdashboard implements AfterViewInit {
 
     // Dynamically inject GraphComponent
     const compRef = this.viewContainerRef.createComponent(GraphComponent);
-    compRef.instance.apple = 'Injected from ngAfterViewInit';
+    compRef.instance.name = '🛈 Click “Choose Data” to configure this widget.';
     body.appendChild(compRef.location.nativeElement);
 
     content.appendChild(toolbar);
@@ -105,11 +114,8 @@ export class DDdashboard implements AfterViewInit {
     body.className = 'widget-body';
     body.style.padding = '10px';
 
-    // Use DonutChart and set inputs
-    const compRef = this.viewContainerRef.createComponent(DonutChart);
-    compRef.instance.labels = ['Tech', 'Finance', 'Retail'];
-    compRef.instance.values = [60, 25, 15];
-    compRef.instance.colors = ['#FF5733', '#33FF57', '#3357FF'];
+    const compRef = this.viewContainerRef.createComponent(GraphComponent);
+    compRef.instance.name = '🛈 Click “Choose Data” to configure this widget.';
     body.appendChild(compRef.location.nativeElement);
 
     content.appendChild(toolbar);
@@ -281,6 +287,45 @@ export class DDdashboard implements AfterViewInit {
 
     this.closeDataPicker();
   }
+
+  applyChartSelection(): void {
+  if (!this.selectedWidgetEl) return;
+
+  const body = this.selectedWidgetEl.querySelector('.widget-body');
+  if (!body) return;
+
+  body.innerHTML = ''; // clear existing content
+
+  let compRef: any;
+
+  switch (this.design.chartType) {
+    case 'donut':
+      compRef = this.viewContainerRef.createComponent(DonutChart);
+      compRef.instance.labels = ['A', 'B', 'C'];
+      compRef.instance.values = [50, 30, 20];
+      compRef.instance.colors = ['#FF6384', '#36A2EB', '#FFCE56'];
+      break;
+
+    case 'gauge':
+      compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
+      compRef.instance.value = 65;
+      compRef.instance.label = 'Performance';
+      break;
+
+    case 'biggauge':
+      compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
+      compRef.instance.value = 72;
+      compRef.instance.header_text = 'Service Level';
+      break;
+  }
+
+  if (compRef) {
+    body.appendChild(compRef.location.nativeElement);
+  }
+
+  this.closeDataPicker();
+}
+
 
 
 

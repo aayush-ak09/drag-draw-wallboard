@@ -24,6 +24,12 @@
 
       <label>Stats:</label>
       <ul>
+        <li *ngFor="let chart of chartTypes"
+          (click)="design.chartType = chart.value; applyChartSelection()">
+          {{ chart.label }}
+        </li>
+      </ul>
+      <ul>
         <li *ngFor="let stat of templateInput.Stats" (click)="selectStat(stat)">
           {{ stat[0] }} — {{ stat[1] }}
         </li>
