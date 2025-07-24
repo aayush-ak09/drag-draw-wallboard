@@ -1,8 +1,9 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, Injector, ComponentFactoryResolver, ApplicationRef, EmbeddedViewRef } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, inject, ViewContainerRef } from '@angular/core';
 import { GridStack, GridStackOptions, GridStackWidget } from 'gridstack';
 import { CommonModule } from '@angular/common';
 import { GraphComponent } from '../graph-component/graph-component';
 import { FormsModule } from '@angular/forms';
+import { DonutChart } from '../../components/donut-chart/donut-chart';
 
 @Component({
   selector: 'app-dddashboard',
@@ -21,19 +22,11 @@ export class DDdashboard implements AfterViewInit {
     fontFamily: 'Arial',
     fontSize: 16
   };
-  imString: string = 'I m Developer'
 
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
   drawModeONN: boolean = true;
   private grid!: GridStack;
-
-
-  constructor(
-    private componentFactoryResolver: ComponentFactoryResolver,
-    private injector: Injector,
-    private appRef: ApplicationRef
-  ) { }
-
+  private viewContainerRef = inject(ViewContainerRef);
 
 
   ngAfterViewInit(): void {
@@ -57,22 +50,28 @@ export class DDdashboard implements AfterViewInit {
     // Create the widget content
     const content = document.createElement('div');
     content.classList.add('grid-stack-item-content');
-    content.innerHTML = `
-    <div class="widget-toolbar">
+    const toolbar = document.createElement('div');
+    toolbar.className = 'widget-toolbar';
+    toolbar.innerHTML = `
       <button class="choose-data-btn">Choose Data</button>
       <button class="delete-widget-btn">🗑️</button>
-    </div>
-    <div class="widget-body">
-      <app-graph-component [apple]=${this.imString}></app-graph-component>
-      <p>Drop content here...</p>
-    </div>
-  `;
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'widget-body';
+    body.style.padding = '10px';
+
+    const compRef = this.viewContainerRef.createComponent(GraphComponent);
+    body.appendChild(compRef.location.nativeElement);
+
+    content.appendChild(toolbar);
+    content.appendChild(body);
 
     // Append content to the element
     el.appendChild(content);
 
     // Add to grid
-    this.grid.addWidget(el);
+    this.grid.makeWidget(el);
 
     // Optional: Attach events after widget is rendered
     setTimeout(() => {
@@ -92,6 +91,8 @@ export class DDdashboard implements AfterViewInit {
   }
 
   addWidget(): void {
+    const count = this.grid.getGridItems().length;
+
     const widget = document.createElement('div');
     widget.classList.add('grid-stack-item');
     widget.setAttribute('gs-x', '0');
@@ -102,63 +103,45 @@ export class DDdashboard implements AfterViewInit {
     const content = document.createElement('div');
     content.classList.add('grid-stack-item-content');
 
-    const defaultStyle = {
-      bgColor: 'white',
-      textColor: 'black',
-      textAlign: 'center',
-      fontFamily: 'Arial',
-      fontSize: '16px'
-    };
+    const toolbar = document.createElement('div');
+    toolbar.className = 'widget-toolbar';
+    toolbar.innerHTML = `
+      <button class="choose-data-btn">Choose Data</button>
+      <button class="delete-widget-btn">🗑️</button>
+    `;
 
-    content.innerHTML = `
-    <div class="completebox">
-      <div class="widget-toolbar">
-        <button class="choose-data-btn">Choose Data</button>
-        <button class="delete-widget-btn">🗑️</button>
-      </div>
-      <div class="widget-body" style="
-        background-color: ${defaultStyle.bgColor};
-        color: ${defaultStyle.textColor};
-        text-align: ${defaultStyle.textAlign};
-        font-family: ${defaultStyle.fontFamily};
-        font-size: ${defaultStyle.fontSize};
-        display: flex; align-items: center; justify-content: center;
-      ">
-        <div class="component-placeholder"></div>
-      </div>
-    </div>
-  `;
+    const body = document.createElement('div');
+    body.className = 'widget-body';
+    body.style.padding = '10px';
 
+    const compRef = this.viewContainerRef.createComponent(DonutChart);
+    compRef.instance.labels = ['Tech', 'Finance', 'Retail'];
+    compRef.instance.values = [60, 25, 15];
+    compRef.instance.colors = ['#FF5733', '#33FF57', '#3357FF'];
+    body.appendChild(compRef.location.nativeElement);
+
+    content.appendChild(toolbar);
+    content.appendChild(body);
     widget.appendChild(content);
     this.gridContainer.nativeElement.appendChild(widget);
     this.grid.makeWidget(widget);
 
-    // ✅ Inject Angular component
-    const placeholder = widget.querySelector('.component-placeholder');
-    if (placeholder) {
-      const factory = this.componentFactoryResolver.resolveComponentFactory(GraphComponent);
-      const componentRef = factory.create(this.injector);
-      //to define input variables 
-      componentRef.instance.apple = this.imString;
-      this.appRef.attachView(componentRef.hostView);
-      placeholder.appendChild((componentRef.hostView as EmbeddedViewRef<any>).rootNodes[0]);
-    }
+    setTimeout(() => {
+      const chooseButton = widget.querySelector('.choose-data-btn');
+      const deleteButton = widget.querySelector('.delete-widget-btn');
 
-    // Button event logic
-    const btn = widget.querySelector('.choose-data-btn');
-    if (btn) {
-      btn.addEventListener('click', () => this.openDataPicker(widget));
-    }
+      if (chooseButton) {
+        chooseButton.addEventListener('click', () => this.openDataPicker(widget));
+      }
 
-    const deleteBtn = widget.querySelector('.delete-widget-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => {
-        this.grid.removeWidget(widget);
-      });
-    }
+      if (deleteButton) {
+        deleteButton.addEventListener('click', () => {
+          widget.remove();
+        });
+      }
+    });
+
   }
-
-
 
 
   saveLayout(): void {
@@ -212,27 +195,26 @@ export class DDdashboard implements AfterViewInit {
         widget.setAttribute('gs-w', item.w);
         widget.setAttribute('gs-h', item.h);
 
-        const content = document.createElement('div');
-        content.classList.add('grid-stack-item-content');
-
-        // Optional styling object (make sure it's saved in layout too)
         const style = item.style || {};
 
+        const content = document.createElement('div');
+        content.classList.add('grid-stack-item-content');
         content.innerHTML = `
         <div class="completebox">
           <div class="widget-toolbar">
             <button class="choose-data-btn">Choose Data</button>
           </div>
-          <div class="widget-body" style="
-            background-color: ${style.bgColor || 'white'};
-            color: ${style.textColor || 'black'};
-            text-align: ${style.textAlign || 'left'};
-            font-family: ${style.fontFamily || 'Arial'};
-            font-size: ${style.fontSize || '16px'};
-            display: flex; align-items: center; justify-content: center;
-          ">
-            <!-- Dynamic component will be injected here -->
-            <div class="component-placeholder"></div>
+          <div 
+            class="widget-body" 
+            style="
+              background-color: ${style.bgColor || 'white'};
+              color: ${style.textColor || 'black'};
+              text-align: ${style.textAlign || 'left'};
+              font-family: ${style.fontFamily || 'Arial'};
+              font-size: ${style.fontSize || '16px'};
+              display: flex; align-items: center; justify-content: center;"
+          >
+            ${item.content}
           </div>
         </div>
       `;
@@ -241,17 +223,6 @@ export class DDdashboard implements AfterViewInit {
         this.gridContainer.nativeElement.appendChild(widget);
         this.grid.makeWidget(widget);
 
-        // ✅ Inject Angular component dynamically
-        const placeholder = widget.querySelector('.component-placeholder');
-        if (placeholder) {
-          const factory = this.componentFactoryResolver.resolveComponentFactory(GraphComponent);
-          const componentRef = factory.create(this.injector);
-          componentRef.instance.apple = this.imString; // 🔥 Inject your variable
-          this.appRef.attachView(componentRef.hostView);
-          placeholder.appendChild((componentRef.hostView as EmbeddedViewRef<any>).rootNodes[0]);
-        }
-
-        // Reattach Choose Data button logic
         setTimeout(() => {
           const btn = widget.querySelector('.choose-data-btn');
           if (btn) {
@@ -261,7 +232,6 @@ export class DDdashboard implements AfterViewInit {
       });
     }
   }
-
 
 
 
