@@ -24,8 +24,7 @@
 
       <label>Stats:</label>
       <ul>
-        <li *ngFor="let chart of chartTypes"
-          (click)="design.chartType = chart.value; applyChartSelection()">
+        <li *ngFor="let chart of chartTypes" (click)="design.chartType = chart.value; applyChartSelection()">
           {{ chart.label }}
         </li>
       </ul>
@@ -44,56 +43,54 @@
     </div>
 
     <!-- Custom Design Tab -->
-   <div *ngIf="activeTab === 'design'" class="custom-design">
-  <h2>Custom Design</h2>
+    <div *ngIf="activeTab === 'design'" class="custom-design">
+      <h2>Custom Design</h2>
 
-  <div class="form-row">
-    <label>Background Color:</label>
-    <input type="color" [(ngModel)]="design.bgColor" />
-    <label>Text Color:</label>
-    <input type="color" [(ngModel)]="design.textColor" />
-  </div>
+      <div class="form-row">
+        <label>Background Color:</label>
+        <input type="color" [(ngModel)]="design.bgColor" />
+        <label>Text Color:</label>
+        <input type="color" [(ngModel)]="design.textColor" />
+      </div>
 
-  <div class="form-row">
-    <label>Text Alignment:</label>
-    <select [(ngModel)]="design.textAlign">
-      <option value="left">Left</option>
-      <option value="center">Center</option>
-      <option value="right">Right</option>
-    </select>
-  </div>
+      <div class="form-row">
+        <label>Text Alignment:</label>
+        <select [(ngModel)]="design.textAlign">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
 
-  <div class="form-row">
-    <label>Font Type:</label>
-    <select [(ngModel)]="design.fontFamily">
-      <option value="Arial">Arial</option>
-      <option value="Verdana">Verdana</option>
-      <option value="Tahoma">Tahoma</option>
-      <option value="Georgia">Georgia</option>
-    </select>
-    <label>Font Size:</label>
-    <input type="number" [(ngModel)]="design.fontSize" style="width: 60px;" /> px
-  </div>
+      <div class="form-row">
+        <label>Font Type:</label>
+        <select [(ngModel)]="design.fontFamily">
+          <option value="Arial">Arial</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Tahoma">Tahoma</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+        <label>Font Size:</label>
+        <input type="number" [(ngModel)]="design.fontSize" style="width: 60px;" /> px
+      </div>
 
-  <div class="form-row preview-box" 
-       [ngStyle]="{
+      <div class="form-row preview-box" [ngStyle]="{
          'background-color': design.bgColor,
          'color': design.textColor,
          'text-align': design.textAlign,
          'font-family': design.fontFamily,
          'font-size.px': design.fontSize
        }">
-    This is a preview
-  </div>
+        This is a preview
+      </div>
 
-  <div class="form-row">
-    <button (click)="applyCustomDesign()">Apply</button>
-    <button (click)="closeDataPicker()">Cancel</button>
-  </div>
-</div>
+      <div class="form-row">
+        <button (click)="applyCustomDesign()">Apply</button>
+        <button (click)="closeDataPicker()">Cancel</button>
+      </div>
 
+      <app-barchart [labels]="['Jan', 'Feb', 'Mar', 'Apr']" [values]="[12, 19, 3, 5]"
+        [colors]="['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']">
+      </app-barchart>
 
-
-<div *ngIf="false">
-  <app-graph-component></app-graph-component>
-</div>
+    </div>

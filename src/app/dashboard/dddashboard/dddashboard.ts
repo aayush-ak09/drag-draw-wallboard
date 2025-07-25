@@ -6,14 +6,16 @@ import { FormsModule } from '@angular/forms';
 import { DonutChart } from '../../components/donut-chart/donut-chart';
 import { GaugeChartComponent } from '../../components/gauge-chart/gauge-chart';
 import { JoyBigGaugeChartComponent } from '../../components/joy-big-gauge/joy-big-gauge-chart.component';
+import { Barchart } from '../../components/barchart/barchart';
 
 @Component({
   selector: 'app-dddashboard',
   standalone: true,
   templateUrl: './dddashboard.html',
   styleUrls: ['./dddashboard.css'],
-  imports: [CommonModule, GraphComponent, FormsModule]
+  imports: [CommonModule,FormsModule,Barchart]
 })
+
 export class DDdashboard implements AfterViewInit {
   activeTab: 'data' | 'design' = 'data';
 
@@ -27,9 +29,10 @@ export class DDdashboard implements AfterViewInit {
   };
 
   chartTypes = [
-  { value: 'donut', label: 'Donut Chart' },
-  { value: 'gauge', label: 'Simple Gauge' },
-  { value: 'biggauge', label: 'Big Gauge' }
+    { value: 'donut', label: 'Donut Chart' },
+    { value: 'gauge', label: 'Simple Gauge' },
+    { value: 'biggauge', label: 'Big Gauge' },
+    { value: 'barchart', label: 'Bar Graph' }
   ];
 
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
@@ -289,42 +292,49 @@ export class DDdashboard implements AfterViewInit {
   }
 
   applyChartSelection(): void {
-  if (!this.selectedWidgetEl) return;
+    if (!this.selectedWidgetEl) return;
 
-  const body = this.selectedWidgetEl.querySelector('.widget-body');
-  if (!body) return;
+    const body = this.selectedWidgetEl.querySelector('.widget-body');
+    if (!body) return;
 
-  body.innerHTML = ''; // clear existing content
+    body.innerHTML = ''; // clear existing content
 
-  let compRef: any;
+    let compRef: any;
 
-  switch (this.design.chartType) {
-    case 'donut':
-      compRef = this.viewContainerRef.createComponent(DonutChart);
-      compRef.instance.labels = ['A', 'B', 'C'];
-      compRef.instance.values = [50, 30, 20];
-      compRef.instance.colors = ['#FF6384', '#36A2EB', '#FFCE56'];
-      break;
+    switch (this.design.chartType) {
+      case 'donut':
+        compRef = this.viewContainerRef.createComponent(DonutChart);
+        compRef.instance.labels = ['A', 'B', 'C'];
+        compRef.instance.values = [50, 30, 20];
+        compRef.instance.colors = ['#FF6384', '#36A2EB', '#FFCE56'];
+        break;
 
-    case 'gauge':
-      compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
-      compRef.instance.value = 65;
-      compRef.instance.label = 'Performance';
-      break;
+      case 'gauge':
+        compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
+        compRef.instance.value = 65;
+        compRef.instance.label = 'Performance';
+        break;
 
-    case 'biggauge':
-      compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
-      compRef.instance.value = 72;
-      compRef.instance.header_text = 'Service Level';
-      break;
+      case 'biggauge':
+        compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
+        compRef.instance.value = 72;
+        compRef.instance.header_text = 'Service Level';
+        break;
+
+      case 'barchart':
+        compRef = this.viewContainerRef.createComponent(Barchart);
+        compRef.instance.labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+        compRef.instance.values = [120, 150, 180, 200];
+        compRef.instance.colors = ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'];
+        break;
+    }
+
+    if (compRef) {
+      body.appendChild(compRef.location.nativeElement);
+    }
+
+    this.closeDataPicker();
   }
-
-  if (compRef) {
-    body.appendChild(compRef.location.nativeElement);
-  }
-
-  this.closeDataPicker();
-}
 
 
 
