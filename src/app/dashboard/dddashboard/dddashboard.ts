@@ -141,33 +141,36 @@ export class DDdashboard implements AfterViewInit {
   }
 
 
-  saveLayout(): void {
-    const widgets = this.grid.engine.nodes.map(node => {
-      const el = node.el!;
-      const contentEl = el.querySelector('.widget-body') as HTMLElement;
-      const style = window.getComputedStyle(contentEl);
+saveLayout(): void {
+  const widgets = this.grid.engine.nodes.map(node => {
+    const el = node.el!;
+    const bodyEl = el.querySelector('.widget-body') as HTMLElement;
+    const style = window.getComputedStyle(bodyEl);
 
-      const content = contentEl ? contentEl.innerHTML : '';
+    const chartType = bodyEl.dataset['chartType'] || 'text';
+    const chartConfigRaw = bodyEl.dataset['chartConfig'];
+    const config = chartConfigRaw ? JSON.parse(chartConfigRaw) : {};
 
-      return {
-        x: node.x,
-        y: node.y,
-        w: node.w,
-        h: node.h,
-        content,
-        style: {
-          bgColor: style.backgroundColor,
-          textColor: style.color,
-          textAlign: style.textAlign,
-          fontFamily: style.fontFamily,
-          fontSize: style.fontSize
-        }
-      };
-    });
+    return {
+      x: node.x,
+      y: node.y,
+      w: node.w,
+      h: node.h,
+      chartType,
+      config,
+      style: {
+        bgColor: style.backgroundColor,
+        textColor: style.color,
+        textAlign: style.textAlign,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize
+      }
+    };
+  });
 
-    localStorage.setItem('my-dashboard-layout', JSON.stringify(widgets));
-    console.log('Layout with content + style saved:', widgets);
-  }
+  localStorage.setItem('my-dashboard-layout', JSON.stringify(widgets));
+  console.log('Layout saved:', widgets);
+}
 
 
   showLayout(): void {
@@ -177,58 +180,96 @@ export class DDdashboard implements AfterViewInit {
   }
 
 
-  loadLayout(): void {
-    const raw = localStorage.getItem('my-dashboard-layout');
-    if (raw) {
-      const widgets = JSON.parse(raw);
+loadLayout(): void {
+  const raw = localStorage.getItem('my-dashboard-layout');
+  if (raw) {
+    const widgets = JSON.parse(raw);
+    this.grid.removeAll(false);
 
-      this.grid.removeAll(false);
+    widgets.forEach((item: any) => {
+      const widget = document.createElement('div');
+      widget.classList.add('grid-stack-item');
+      widget.setAttribute('gs-x', item.x);
+      widget.setAttribute('gs-y', item.y);
+      widget.setAttribute('gs-w', item.w);
+      widget.setAttribute('gs-h', item.h);
 
-      widgets.forEach((item: any) => {
-        const widget = document.createElement('div');
-        widget.classList.add('grid-stack-item');
-        widget.setAttribute('gs-x', item.x);
-        widget.setAttribute('gs-y', item.y);
-        widget.setAttribute('gs-w', item.w);
-        widget.setAttribute('gs-h', item.h);
+      const content = document.createElement('div');
+      content.classList.add('grid-stack-item-content');
 
-        const style = item.style || {};
+      const toolbar = document.createElement('div');
+      toolbar.className = 'widget-toolbar';
+      toolbar.innerHTML = `<button class="choose-data-btn">Choose Data</button>`;
 
-        const content = document.createElement('div');
-        content.classList.add('grid-stack-item-content');
-        content.innerHTML = `
-        <div class="completebox">
-          <div class="widget-toolbar">
-            <button class="choose-data-btn">Choose Data</button>
-          </div>
-          <div 
-            class="widget-body" 
-            style="
-              background-color: ${style.bgColor || 'white'};
-              color: ${style.textColor || 'black'};
-              text-align: ${style.textAlign || 'left'};
-              font-family: ${style.fontFamily || 'Arial'};
-              font-size: ${style.fontSize || '16px'};
-              display: flex; align-items: center; justify-content: center;"
-          >
-            ${item.content}
-          </div>
-        </div>
-      `;
-
-        widget.appendChild(content);
-        this.gridContainer.nativeElement.appendChild(widget);
-        this.grid.makeWidget(widget);
-
-        setTimeout(() => {
-          const btn = widget.querySelector('.choose-data-btn');
-          if (btn) {
-            btn.addEventListener('click', () => this.openDataPicker(widget));
-          }
-        });
+      const body = document.createElement('div');
+      body.className = 'widget-body';
+      Object.assign(body.style, {
+        backgroundColor: item.style.bgColor,
+        color: item.style.textColor,
+        textAlign: item.style.textAlign,
+        fontFamily: item.style.fontFamily,
+        fontSize: item.style.fontSize
       });
-    }
+
+      // Set metadata for potential future edits
+      body.dataset['chartType'] = item.chartType;
+      body.dataset['chartConfig'] = JSON.stringify(item.config || {});
+
+      // Dynamically recreate the component
+      let compRef: any;
+      const config = item.config || {};
+
+      switch (item.chartType) {
+        case 'donut':
+          compRef = this.viewContainerRef.createComponent(DonutChart);
+          compRef.instance.labels = config.labels || ['A', 'B', 'C'];
+          compRef.instance.values = config.values || [50, 30, 20];
+          compRef.instance.colors = config.colors || ['#FF6384', '#36A2EB', '#FFCE56'];
+          break;
+
+        case 'gauge':
+          compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
+          compRef.instance.value = config.value || 0;
+          compRef.instance.label = config.label || 'Gauge';
+          break;
+
+        case 'biggauge':
+          compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
+          compRef.instance.value = config.value || 0;
+          compRef.instance.header_text = config.header_text || 'Title';
+          break;
+
+        case 'barchart':
+          compRef = this.viewContainerRef.createComponent(Barchart);
+          compRef.instance.labels = config.labels || ['Q1', 'Q2', 'Q3', 'Q4'];
+          compRef.instance.values = config.values || [120, 150, 180, 200];
+          compRef.instance.colors = config.colors || ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'];
+          break;
+
+        default:
+          body.innerHTML = '<p>Unsupported or missing chart</p>';
+          break;
+      }
+
+      if (compRef) {
+        body.appendChild(compRef.location.nativeElement);
+      }
+
+      content.appendChild(toolbar);
+      content.appendChild(body);
+      widget.appendChild(content);
+      this.gridContainer.nativeElement.appendChild(widget);
+      this.grid.makeWidget(widget);
+
+      setTimeout(() => {
+        const chooseButton = widget.querySelector('.choose-data-btn');
+        if (chooseButton) {
+          chooseButton.addEventListener('click', () => this.openDataPicker(widget));
+        }
+      });
+    });
   }
+}
 
 
 
@@ -291,50 +332,89 @@ export class DDdashboard implements AfterViewInit {
     this.closeDataPicker();
   }
 
-  applyChartSelection(): void {
-    if (!this.selectedWidgetEl) return;
+applyChartSelection(): void {
+  if (!this.selectedWidgetEl) return;
 
-    const body = this.selectedWidgetEl.querySelector('.widget-body');
-    if (!body) return;
+  const widgetEl = this.selectedWidgetEl;
+  const body = widgetEl.querySelector('.widget-body') as HTMLElement;
 
-    body.innerHTML = ''; // clear existing content
+  if (!body) return;
 
-    let compRef: any;
+  // Clear existing content
+  body.innerHTML = '';
 
-    switch (this.design.chartType) {
-      case 'donut':
-        compRef = this.viewContainerRef.createComponent(DonutChart);
-        compRef.instance.labels = ['A', 'B', 'C'];
-        compRef.instance.values = [50, 30, 20];
-        compRef.instance.colors = ['#FF6384', '#36A2EB', '#FFCE56'];
-        break;
+  let compRef: any;
+  let config: any = {};
+  let width = 3;
+  let height = 2;
 
-      case 'gauge':
-        compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
-        compRef.instance.value = 65;
-        compRef.instance.label = 'Performance';
-        break;
+  switch (this.design.chartType) {
+    case 'donut':
+      compRef = this.viewContainerRef.createComponent(DonutChart);
+      config = {
+        labels: ['A', 'B', 'C'],
+        values: [50, 30, 20],
+        colors: ['#FF6384', '#36A2EB', '#FFCE56']
+      };
+      compRef.instance.labels = config.labels;
+      compRef.instance.values = config.values;
+      compRef.instance.colors = config.colors;
+      break;
 
-      case 'biggauge':
-        compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
-        compRef.instance.value = 72;
-        compRef.instance.header_text = 'Service Level';
-        break;
+    case 'gauge':
+      compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
+      config = {
+        value: 65,
+        label: 'Performance'
+      };
+      compRef.instance.value = config.value;
+      compRef.instance.label = config.label;
+      width = 2;
+      height = 3;
+      break;
 
-      case 'barchart':
-        compRef = this.viewContainerRef.createComponent(Barchart);
-        compRef.instance.labels = ['Q1', 'Q2', 'Q3', 'Q4'];
-        compRef.instance.values = [120, 150, 180, 200];
-        compRef.instance.colors = ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'];
-        break;
-    }
+    case 'biggauge':
+      compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
+      config = {
+        value: 72,
+        header_text: 'Service Level'
+      };
+      compRef.instance.value = config.value;
+      compRef.instance.header_text = config.header_text;
+      width = 3;
+      height = 5;
+      break;
 
-    if (compRef) {
-      body.appendChild(compRef.location.nativeElement);
-    }
+    case 'barchart':
+      compRef = this.viewContainerRef.createComponent(Barchart);
+      config = {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        values: [120, 150, 180, 200],
+        colors: ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9']
+      };
+      compRef.instance.labels = config.labels;
+      compRef.instance.values = config.values;
+      compRef.instance.colors = config.colors;
+      break;
 
-    this.closeDataPicker();
+    default:
+      body.innerHTML = '<p>Unsupported chart type</p>';
+      return;
   }
+
+  if (compRef) {
+    body.appendChild(compRef.location.nativeElement);
+
+    // Save metadata for restoring layout later
+    body.dataset['chartType'] = this.design.chartType;
+    body.dataset['chartConfig'] = JSON.stringify(config);
+
+    // Dynamically update widget size
+    this.grid.update(widgetEl, { w: width, h: height });
+  }
+
+  this.closeDataPicker();
+}
 
 
 
