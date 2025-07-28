@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, inject, ViewContainerRef } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, inject, ViewContainerRef, HostListener } from '@angular/core';
 import { GridStack, GridStackOptions, GridStackWidget } from 'gridstack';
 import { CommonModule } from '@angular/common';
 import { GraphComponent } from '../graph-component/graph-component';
@@ -42,10 +42,20 @@ export class DDdashboard implements AfterViewInit {
 
 
   ngAfterViewInit(): void {
+
+  const totalRows = 48;
+
+  const topBarHeight = document.querySelector('.control-center')?.clientHeight || 0;
+  const verticalMargins = 16;
+  const availableHeight = window.innerHeight - topBarHeight - verticalMargins ;
+
+  const dynamicCellHeight = Math.floor(availableHeight / totalRows);
+
     const options: GridStackOptions = {
-      cellHeight: 80,
-      float: true,
-      column: 12
+    cellHeight: dynamicCellHeight + 'px',
+    float: true,
+    column: 48,
+    margin: 5,
     };
 
     this.grid = GridStack.init(options, this.gridContainer.nativeElement);
@@ -54,8 +64,8 @@ export class DDdashboard implements AfterViewInit {
     el.classList.add('grid-stack-item');
     el.setAttribute('gs-x', '0');
     el.setAttribute('gs-y', '0');
-    el.setAttribute('gs-w', '3');
-    el.setAttribute('gs-h', '2');
+    el.setAttribute('gs-w', '12');
+    el.setAttribute('gs-h', '8');
 
     const content = document.createElement('div');
     content.classList.add('grid-stack-item-content');
@@ -100,8 +110,8 @@ export class DDdashboard implements AfterViewInit {
     widget.classList.add('grid-stack-item');
     widget.setAttribute('gs-x', '0');
     widget.setAttribute('gs-y', '0');
-    widget.setAttribute('gs-w', '3');
-    widget.setAttribute('gs-h', '2');
+    widget.setAttribute('gs-w', '12');
+    widget.setAttribute('gs-h', '8');
 
     const content = document.createElement('div');
     content.classList.add('grid-stack-item-content');
@@ -369,8 +379,8 @@ applyChartSelection(): void {
       };
       compRef.instance.value = config.value;
       compRef.instance.label = config.label;
-      width = 2;
-      height = 3;
+      width = 8;
+      height = 16;
       break;
 
     case 'biggauge':
@@ -381,8 +391,8 @@ applyChartSelection(): void {
       };
       compRef.instance.value = config.value;
       compRef.instance.header_text = config.header_text;
-      width = 3;
-      height = 5;
+      width = 16;
+      height = 24;
       break;
 
     case 'barchart':
@@ -490,6 +500,15 @@ applyChartSelection(): void {
     }
   }
 
+  @HostListener('window:resize')
+  onResize() {
+  const topBarHeight = document.querySelector('.control-center')?.clientHeight || 0;
+  const verticalMargins = 16;
+  const availableHeight = window.innerHeight - topBarHeight - verticalMargins;
+  const newCellHeight = Math.floor(availableHeight / 48);
+
+  this.grid.cellHeight(newCellHeight);
+}
 
 
 }
