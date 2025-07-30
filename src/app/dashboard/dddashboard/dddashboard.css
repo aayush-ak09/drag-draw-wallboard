@@ -209,3 +209,9 @@
   background: #007bff;
   color: white;
 }
+
+.selected {
+  background-color: #d0e7ff;
+  font-weight: bold;
+  border-radius: 4px;
+}

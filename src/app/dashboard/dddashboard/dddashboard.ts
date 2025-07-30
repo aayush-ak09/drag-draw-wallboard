@@ -40,6 +40,8 @@ export class DDdashboard implements AfterViewInit {
   private grid!: GridStack;
   private viewContainerRef = inject(ViewContainerRef);
 
+  selectedStats: [string, string][] = [];
+
 
   ngAfterViewInit(): void {
 
@@ -257,7 +259,13 @@ loadLayout(): void {
           break;
 
         default:
-          body.innerHTML = '<p>Unsupported or missing chart</p>';
+        if (item.config?.stats?.length) {
+          body.innerHTML = item.config.stats
+            .map((stat: [string, string]) => `<h4>${stat[0]}</h4><p>${stat[1]}</p>`)
+            .join('');
+        } else {
+          body.innerHTML = '<p>No content available</p>';
+        }
           break;
       }
 
@@ -499,6 +507,73 @@ applyChartSelection(): void {
       }
     }
   }
+
+
+  toggleStatSelection(stat: [string, string]): void {
+    const index = this.selectedStats.findIndex(
+      s => s[0] === stat[0] && s[1] === stat[1]
+    );
+    if (index !== -1) {
+      this.selectedStats.splice(index, 1);
+    } else {
+      this.selectedStats.push(stat);
+    }
+  }
+
+  isStatSelected(stat: [string, string]): boolean {
+    return this.selectedStats.some(
+      s => s[0] === stat[0] && s[1] === stat[1]
+    );
+  }
+
+applySelectedStats(): void {
+  if (this.selectedWidgetEl && this.selectedStats.length > 0) {
+    const body = this.selectedWidgetEl.querySelector('.widget-body') as HTMLElement;
+    if (body) {
+      // Set stat content
+      body.innerHTML = this.selectedStats
+        .map(stat => `<h4>${stat[0]}</h4><p>${stat[1]}</p>`)
+        .join('');
+
+      // Save metadata
+      body.dataset['chartType'] = 'text';
+      body.dataset['chartConfig'] = JSON.stringify({ stats: this.selectedStats });
+
+      // Resize the widget
+      const h = this.selectedStats.length * 8;
+      const w = 5;
+      this.grid.update(this.selectedWidgetEl, { w, h });
+
+      // Safe dynamic body height based on DOM after render
+      setTimeout(() => {
+        if (!this.selectedWidgetEl) return; // prevent null access
+
+        const widgetEl = this.selectedWidgetEl;
+        const content = widgetEl.querySelector('.grid-stack-item-content') as HTMLElement | null;
+        const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement | null;
+        const bodyAgain = widgetEl.querySelector('.widget-body') as HTMLElement | null;
+
+        if (content && toolbar && bodyAgain) {
+          const availableHeight = content.offsetHeight - toolbar.offsetHeight;
+
+          Object.assign(bodyAgain.style, {
+            height: `${availableHeight}px`,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          });
+        }
+      }, 0);
+    }
+  }
+
+  this.selectedStats = [];
+  this.closeDataPicker();
+}
+
 
   @HostListener('window:resize')
   onResize() {

@@ -22,17 +22,22 @@
     <div *ngIf="activeTab === 'data'" class="tab-content">
       <h3>Select Data</h3>
 
-      <label>Stats:</label>
+      <label>Chart Stats:</label>
       <ul>
         <li *ngFor="let chart of chartTypes" (click)="design.chartType = chart.value; applyChartSelection()">
           {{ chart.label }}
         </li>
       </ul>
+      <label>Boxes Stats:</label>
       <ul>
-        <li *ngFor="let stat of templateInput.Stats" (click)="selectStat(stat)">
+        <li 
+          *ngFor="let stat of templateInput.Stats" 
+          (click)="toggleStatSelection(stat)"
+          [class.selected]="isStatSelected(stat)">
           {{ stat[0] }} — {{ stat[1] }}
         </li>
       </ul>
+      <button (click)="applySelectedStats()">✅ Apply Selected</button>
 
       <label>Tables:</label>
       <ul>
