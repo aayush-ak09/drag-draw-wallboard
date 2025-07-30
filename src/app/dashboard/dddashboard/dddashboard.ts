@@ -528,7 +528,9 @@ applyChartSelection(): void {
 
 applySelectedStats(): void {
   if (this.selectedWidgetEl && this.selectedStats.length > 0) {
-    const body = this.selectedWidgetEl.querySelector('.widget-body') as HTMLElement;
+    const widgetEl = this.selectedWidgetEl;
+    const body = widgetEl.querySelector('.widget-body') as HTMLElement;
+
     if (body) {
       // Set stat content
       body.innerHTML = this.selectedStats
@@ -539,34 +541,39 @@ applySelectedStats(): void {
       body.dataset['chartType'] = 'text';
       body.dataset['chartConfig'] = JSON.stringify({ stats: this.selectedStats });
 
-      // Resize the widget
-      const h = this.selectedStats.length * 8;
-      const w = 5;
-      this.grid.update(this.selectedWidgetEl, { w, h });
+      const content = widgetEl.querySelector('.grid-stack-item-content') as HTMLElement | null;
+      const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement | null;
 
-      // Safe dynamic body height based on DOM after render
-      setTimeout(() => {
-        if (!this.selectedWidgetEl) return; // prevent null access
+      if (content && toolbar && body) {
+        Object.assign(body.style, {
+          display: 'flex',
+          flexDirection: 'column',
+        });
 
-        const widgetEl = this.selectedWidgetEl;
-        const content = widgetEl.querySelector('.grid-stack-item-content') as HTMLElement | null;
-        const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement | null;
-        const bodyAgain = widgetEl.querySelector('.widget-body') as HTMLElement | null;
+        // Defer layout calculation
+        setTimeout(() => {
+          const scrollHeight = body.scrollHeight;
+          const toolbarHeight = toolbar.offsetHeight;
 
-        if (content && toolbar && bodyAgain) {
-          const availableHeight = content.offsetHeight - toolbar.offsetHeight;
+          // Add safe buffer to avoid overflow
+          const totalHeight = scrollHeight + toolbarHeight + 20;
 
-          Object.assign(bodyAgain.style, {
-            height: `${availableHeight}px`,
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-          });
-        }
-      }, 0);
+          // Get cell height from .grid-stack or fallback
+          let cellHeight = 14.75;
+          const gridEl = document.querySelector('.grid-stack') as HTMLElement;
+          if (gridEl) {
+            const raw = getComputedStyle(gridEl).getPropertyValue('--gs-cell-height');
+            const parsed = parseFloat(raw.replace('px', '').trim());
+            if (!isNaN(parsed)) {
+              cellHeight = parsed;
+            }
+          }
+          const h = Math.ceil(totalHeight / cellHeight);
+          const w = 5;
+
+          this.grid.update(widgetEl, { w, h });
+        }, 0);
+      }
     }
   }
 
