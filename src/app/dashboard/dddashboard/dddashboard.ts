@@ -25,7 +25,8 @@ export class DDdashboard implements AfterViewInit {
     textAlign: 'left',
     fontFamily: 'Arial',
     fontSize: 16,
-    chartType: 'donut'
+    chartType: 'donut',
+    layoutDirection: 'vertical' // or 'horizontal'
   };
 
   chartTypes = [
@@ -363,8 +364,8 @@ applyChartSelection(): void {
 
   let compRef: any;
   let config: any = {};
-  let width = 3;
-  let height = 2;
+  let width = 12;
+  let height = 18;
 
   switch (this.design.chartType) {
     case 'donut':
@@ -530,50 +531,60 @@ applySelectedStats(): void {
   if (this.selectedWidgetEl && this.selectedStats.length > 0) {
     const widgetEl = this.selectedWidgetEl;
     const body = widgetEl.querySelector('.widget-body') as HTMLElement;
+    const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement;
 
     if (body) {
-      // Set stat content
+      // Render stat blocks
       body.innerHTML = this.selectedStats
-        .map(stat => `<h4>${stat[0]}</h4><p>${stat[1]}</p>`)
-        .join('');
+        .map(stat => `
+          <div class="stat-block">
+            <h4>${stat[0]}</h4>
+            <p>${stat[1]}</p>
+          </div>
+        `).join('');
 
-      // Save metadata
+      // Save config
       body.dataset['chartType'] = 'text';
-      body.dataset['chartConfig'] = JSON.stringify({ stats: this.selectedStats });
+      body.dataset['chartConfig'] = JSON.stringify({
+        stats: this.selectedStats,
+        layoutDirection: this.design.layoutDirection
+      });
 
-      const content = widgetEl.querySelector('.grid-stack-item-content') as HTMLElement | null;
-      const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement | null;
+      // Apply layout styling
+      Object.assign(body.style, {
+        display: 'flex',
+        flexDirection: this.design.layoutDirection === 'horizontal' ? 'row' : 'column',
+        gap: '12px',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        justifyContent: this.design.layoutDirection === 'horizontal' ? 'space-between' : 'flex-start'
+      });
 
-      if (content && toolbar && body) {
-        Object.assign(body.style, {
-          display: 'flex',
-          flexDirection: 'column',
-        });
-
-        // Defer layout calculation
-        setTimeout(() => {
-          const scrollHeight = body.scrollHeight;
-          const toolbarHeight = toolbar.offsetHeight;
-
-          // Add safe buffer to avoid overflow
-          const totalHeight = scrollHeight + toolbarHeight + 20;
-
-          // Get cell height from .grid-stack or fallback
-          let cellHeight = 14.75;
-          const gridEl = document.querySelector('.grid-stack') as HTMLElement;
-          if (gridEl) {
-            const raw = getComputedStyle(gridEl).getPropertyValue('--gs-cell-height');
-            const parsed = parseFloat(raw.replace('px', '').trim());
-            if (!isNaN(parsed)) {
-              cellHeight = parsed;
-            }
-          }
-          const h = Math.ceil(totalHeight / cellHeight);
-          const w = 5;
-
-          this.grid.update(widgetEl, { w, h });
-        }, 0);
+      // Get grid cell height
+      let cellHeight = 14.75;
+      const gridEl = document.querySelector('.grid-stack') as HTMLElement;
+      if (gridEl) {
+        const raw = getComputedStyle(gridEl).getPropertyValue('--gs-cell-height');
+        const parsed = parseFloat(raw.replace('px', '').trim());
+        if (!isNaN(parsed)) cellHeight = parsed;
       }
+
+      // Auto width & height
+      const statCount = this.selectedStats.length;
+      let w = 5;
+      let h = 4;
+
+      if (this.design.layoutDirection === 'horizontal') {
+        w = Math.min(6 * statCount, 24);
+      } else {
+        w = 5;
+      }
+
+      // Adjust height for both layouts based on content
+      const contentHeight = body.scrollHeight + (toolbar?.offsetHeight || 0) + 20;
+      h = Math.ceil(contentHeight / cellHeight);
+
+      this.grid.update(widgetEl, { w, h });
     }
   }
 

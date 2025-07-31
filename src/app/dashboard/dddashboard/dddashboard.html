@@ -37,6 +37,14 @@
           {{ stat[0] }} — {{ stat[1] }}
         </li>
       </ul>
+      <label>
+      Layout:
+      <select [(ngModel)]="design.layoutDirection">
+        <option value="vertical">Vertical</option>
+        <option value="horizontal">Horizontal</option>
+      </select>
+    </label>
+
       <button (click)="applySelectedStats()">✅ Apply Selected</button>
 
       <label>Tables:</label>
@@ -48,18 +56,65 @@
     </div>
 
     <!-- Custom Design Tab -->
-    <div *ngIf="activeTab === 'design'" class="custom-design">
-      <h2>Custom Design</h2>
+<div class="data-picker-modal" *ngIf="showDataPicker">
+  <div class="data-picker-content">
+    <div class="tab-header">
+      <button class="tab" [class.active]="activeTab === 'data'" (click)="activeTab = 'data'">📊 Select Data</button>
+      <button class="tab" [class.active]="activeTab === 'design'" (click)="activeTab = 'design'">🎨 Custom Design</button>
+    </div>
 
-      <div class="form-row">
-        <label>Background Color:</label>
+    <div *ngIf="activeTab === 'data'" class="design-body">
+      <h3>Chart Stats:</h3>
+      <ul>
+        <li *ngFor="let chart of chartTypes" (click)="design.chartType = chart.value; applyChartSelection()">
+          {{ chart.label }}
+        </li>
+      </ul>
+
+      <h3>Box Stats:</h3>
+      <ul>
+        <li 
+          *ngFor="let stat of templateInput.Stats" 
+          (click)="toggleStatSelection(stat)"
+          [class.selected]="isStatSelected(stat)">
+          {{ stat[0] }} — {{ stat[1] }}
+        </li>
+      </ul>
+
+      <div class="form-group">
+        <label for="layout">Layout:</label>
+        <select [(ngModel)]="design.layoutDirection" id="layout">
+          <option value="vertical">Vertical</option>
+          <option value="horizontal">Horizontal</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <input type="checkbox" id="applyCheckbox" checked />
+        <label for="applyCheckbox">Apply Selected</label>
+        <button class="apply-btn" (click)="applySelectedStats()">Apply</button>
+      </div>
+
+      <h3>Tables:</h3>
+      <ul>
+        <li *ngFor="let key of tableKeys()" (click)="selectTable(key)">
+          {{ key }}
+        </li>
+      </ul>
+    </div>
+
+    <div *ngIf="activeTab === 'design'" class="design-body">
+      <h3>Customize Style</h3>
+
+      <div class="form-group">
+        <label>Background:</label>
         <input type="color" [(ngModel)]="design.bgColor" />
-        <label>Text Color:</label>
+        <label>Text:</label>
         <input type="color" [(ngModel)]="design.textColor" />
       </div>
 
-      <div class="form-row">
-        <label>Text Alignment:</label>
+      <div class="form-group">
+        <label>Align:</label>
         <select [(ngModel)]="design.textAlign">
           <option value="left">Left</option>
           <option value="center">Center</option>
@@ -67,30 +122,32 @@
         </select>
       </div>
 
-      <div class="form-row">
-        <label>Font Type:</label>
+      <div class="form-group">
+        <label>Font:</label>
         <select [(ngModel)]="design.fontFamily">
           <option value="Arial">Arial</option>
           <option value="Verdana">Verdana</option>
           <option value="Tahoma">Tahoma</option>
           <option value="Georgia">Georgia</option>
         </select>
-        <label>Font Size:</label>
+        <label>Size:</label>
         <input type="number" [(ngModel)]="design.fontSize" style="width: 60px;" /> px
       </div>
 
-      <div class="form-row preview-box" [ngStyle]="{
-         'background-color': design.bgColor,
-         'color': design.textColor,
-         'text-align': design.textAlign,
-         'font-family': design.fontFamily,
-         'font-size.px': design.fontSize
-       }">
+      <div class="preview-box" [ngStyle]="{
+        'background-color': design.bgColor,
+        'color': design.textColor,
+        'text-align': design.textAlign,
+        'font-family': design.fontFamily,
+        'font-size.px': design.fontSize
+      }">
         This is a preview
       </div>
 
-      <div class="form-row">
-        <button (click)="applyCustomDesign()">Apply</button>
-        <button (click)="closeDataPicker()">Cancel</button>
+      <div class="button-group">
+        <button class="apply-btn" (click)="applyCustomDesign()">Apply</button>
+        <button class="cancel-btn" (click)="closeDataPicker()">Cancel</button>
       </div>
     </div>
+  </div>
+</div>
