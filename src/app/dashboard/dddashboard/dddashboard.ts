@@ -520,11 +520,11 @@ export class DDdashboard implements AfterViewInit {
         // Apply layout styling
         Object.assign(body.style, {
           display: 'flex',
-          flexDirection: this.design.layoutDirection,
+          flexDirection: this.design.layoutDirection === 'horizontal' ? 'row' : 'column',
           gap: '12px',
           flexWrap: 'wrap',
           alignItems: 'flex-start',
-          justifyContent: this.design.layoutDirection === 'row' ? 'space-between' : 'flex-start'
+          justifyContent: this.design.layoutDirection === 'horizontal' ? 'space-between' : 'flex-start'
         });
 
         // Get grid cell height
@@ -541,7 +541,7 @@ export class DDdashboard implements AfterViewInit {
         let w = 5;
         let h = 4;
 
-        if (this.design.layoutDirection === 'row') {
+        if (this.design.layoutDirection === 'horizontal') {
           w = Math.min(6 * statCount, 24);
         } else { // 'column'
           w = 5;
