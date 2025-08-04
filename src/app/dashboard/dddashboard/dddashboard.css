@@ -7,6 +7,7 @@
 ::ng-deep .grid-stack-item-content {
   background: #e9e9e9;
   color: black;
+  overflow-y: hidden;
   /* display: flex;
   align-items: center;
   justify-content: center; */
@@ -317,4 +318,20 @@
 
 .tab.active {
   background: #ccc;
+}
+
+
+.stats-horizontal {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.stats-vertical {
+  display: block;
+}
+.stat-box {
+  flex: 1;
+  min-width: 150px;
+  text-align: center;
 }
