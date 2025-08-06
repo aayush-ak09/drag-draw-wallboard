@@ -7,28 +7,36 @@ import { DonutChart } from '../../components/donut-chart/donut-chart';
 import { GaugeChartComponent } from '../../components/gauge-chart/gauge-chart';
 import { JoyBigGaugeChartComponent } from '../../components/joy-big-gauge/joy-big-gauge-chart.component';
 import { Barchart } from '../../components/barchart/barchart';
-import { PredefinedLayout} from '../../Serveices/layouts'
+import { PredefinedLayout } from '../../Services/layouts'
+import { DataPickerModalComponent } from '../../utilities/data-picker-modal/data-picker-modal';
+import { DesignConfig } from '../../Services/interfaces';
 
 @Component({
   selector: 'app-dddashboard',
   standalone: true,
   templateUrl: './dddashboard.html',
   styleUrls: ['./dddashboard.css'],
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, DataPickerModalComponent]
 })
 
 export class DDdashboard implements AfterViewInit {
   activeTab: 'data' | 'design' = 'data';
 
-  design = {
+  design: DesignConfig = {
+    chartType: 'donut',
+    layoutDirection: 'vertical',
     bgColor: '#ffffff',
     textColor: '#000000',
-    textAlign: 'left',
+    textAlign: 'center',
     fontFamily: 'Arial',
     fontSize: 16,
-    chartType: 'donut',
-    layoutDirection: 'vertical' // or 'horizontal'
+    box: {
+      background: '#f5f5f5',
+      color: '#333333',
+      fontSize: 14
+    }
   };
+
 
   chartTypes = [
     { value: 'donut', label: 'Donut Chart' },
@@ -43,7 +51,7 @@ export class DDdashboard implements AfterViewInit {
   private viewContainerRef = inject(ViewContainerRef);
 
   selectedStats: [string, string][] = [];
-
+  selectedTable: any;
 
   ngAfterViewInit(): void {
 
@@ -467,15 +475,55 @@ export class DDdashboard implements AfterViewInit {
   applyCustomDesign(): void {
     if (this.selectedWidgetEl) {
       const body = this.selectedWidgetEl.querySelector('.widget-body') as HTMLElement;
-      if (body) {
-        body.style.backgroundColor = this.design.bgColor;
-        body.style.color = this.design.textColor;
-        body.style.textAlign = this.design.textAlign as CanvasTextAlign;
-        body.style.fontFamily = this.design.fontFamily;
-        body.style.fontSize = `${this.design.fontSize}px`;
+      if (body && this.design) {
+        if (this.design.bgColor) {
+          body.style.backgroundColor = this.design.bgColor;
+        }
+
+        if (this.design.textColor) {
+          body.style.color = this.design.textColor;
+        }
+
+        if (this.design.textAlign) {
+          body.style.textAlign = this.design.textAlign as CanvasTextAlign;  // Or just string if you're unsure
+        }
+
+        if (this.design.fontFamily) {
+          body.style.fontFamily = this.design.fontFamily;
+        }
+        if (this.design.fontSize !== undefined) {
+          body.style.fontSize = `${this.design.fontSize}px`;
+        }
       }
     }
   }
+
+
+  handleStatsApplied(event: any): void {
+    console.log('Stats Applied:', event);
+    this.selectedStats = event;
+    this.applySelectedStats()
+  }
+
+  handleChartSelected(chartType: string): void {
+    console.log("Chart selected:", chartType);
+    this.design.chartType = chartType;
+    this.applyChartSelection();
+  }
+
+  handleDesignApplied(event: DesignConfig): void {
+    console.log('Design Config Applied:', event);
+    this.design = event;
+    this.applyCustomDesign();
+  }
+
+  handleTableSelected(event: any): void {
+    console.log('Table Selected:', event);
+    this.selectedTable = event;
+    this.selectTable(this.selectedTable);
+  }
+
+
 
 
   toggleStatSelection(stat: [string, string]): void {
@@ -571,7 +619,7 @@ export class DDdashboard implements AfterViewInit {
 
 
 
-  predefLayouts(){
+  predefLayouts() {
 
   }
 
