@@ -135,7 +135,7 @@
   border-radius: 10px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', sans-serif;
 }
 
@@ -327,11 +327,35 @@
   flex-wrap: wrap;
   gap: 20px;
 }
+
 .stats-vertical {
   display: block;
 }
+
 .stat-box {
   flex: 1;
   min-width: 150px;
   text-align: center;
+}
+
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.widget-option {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.widget-option:hover {
+  background-color: #dcdcdc;
 }

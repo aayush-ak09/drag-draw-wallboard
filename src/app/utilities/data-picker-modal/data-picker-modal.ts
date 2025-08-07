@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChange, SimpleChanges } from '@angular/core';
 import { DesignConfig } from '../../Services/interfaces'
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -8,8 +8,8 @@ import { CommonModule } from '@angular/common';
   templateUrl: './data-picker-modal.html',
   styleUrl: './data-picker-modal.css',
 })
-export class DataPickerModalComponent {
-  @Input() showDataPicker: boolean = false;
+export class DataPickerModalComponent implements OnChanges {
+  @Input() show: boolean = false;
   @Input() templateInput: any;
   @Input() chartTypes: { label: string, value: string }[] = [];
   @Input() design: DesignConfig = {};
@@ -22,6 +22,33 @@ export class DataPickerModalComponent {
   @Output() chartSelected = new EventEmitter<string>();
 
   activeTab: 'data' | 'design' = 'data';
+  selectedWidgetType: string = '';
+  showDataPicker: boolean = false;
+
+  selectWidgetType(type: string): void {
+    this.selectedWidgetType = type;
+  }
+
+  widgetTypes = [
+    { type: 'single-stat', label: '📊 Single Stat' },
+    { type: 'multi-stat', label: '📈 Multi Stat' },
+    { type: 'chart', label: '📉 Chart' },
+    { type: 'graph', label: '📌 Graph' },
+    { type: 'table', label: '📋 Table' },
+    { type: 'logoHeader', label: '🖼 Logo' },
+    { type: 'widget', label: '🔢 Widget' }
+  ];
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['show']) {
+      this.showDataPicker = this.show;
+    }
+  }
+  closeModal(): void {
+    this.showDataPicker = false;
+    this.modalClosed.emit(); // notify parent to update `showDataPicker = false`
+  }
 
   toggleStatSelection(stat: any): void {
     const index = this.selectedStats.findIndex(s => s[0] === stat[0]);
@@ -66,5 +93,7 @@ export class DataPickerModalComponent {
 
   closeDataPicker(): void {
     this.modalClosed.emit();
+    this.showDataPicker = false;
+    this.selectedWidgetType = '';
   }
 }
