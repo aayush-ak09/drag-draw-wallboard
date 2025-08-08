@@ -1,12 +1,22 @@
-<div class="control-center" *ngIf="drawModeONN">
+<div class="d-flex justify-content-end align-items-center p-2 hover" (click)="showCustomOptions()">
+  <div class="hamburger">
+    <div class="line"></div>
+    <div class="line"></div>
+    <div class="line"></div>
+  </div>
+</div>
+
+
+<div class="control-center rightSidebar" *ngIf="drawModeONN && showCustomOption">
+  <!-- only visible on when user of threelines  -->
   <button (click)="addWidget()" style="margin: 10px;">Add Widget</button>
   <button (click)="saveLayout()" style="margin: 10px;">💾 Save Layout</button>
   <button (click)="showLayout()" style="margin: 10px;">Preview</button>
   <button (click)="predefLayouts()" style="margin: 10px;">Predefined Layouts</button>
 </div>
 
-<div *ngIf="!drawModeONN">
-  <button (click)="saveLayout()">💾 Save Layout</button>
+<div *ngIf="!drawModeONN && showCustomOption" class="control-center rightSidebar">
+  <button (click)="saveLayout()"> Customize</button>
 </div>
 
 <div #gridContainer class="grid-stack"></div>

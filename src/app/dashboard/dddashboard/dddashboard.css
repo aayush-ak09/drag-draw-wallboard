@@ -135,7 +135,7 @@
   border-radius: 10px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', sans-serif;
 }
 
@@ -327,11 +327,47 @@
   flex-wrap: wrap;
   gap: 20px;
 }
+
 .stats-vertical {
   display: block;
 }
+
 .stat-box {
   flex: 1;
   min-width: 150px;
   text-align: center;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.line {
+  width: 25px;
+  height: 5px;
+  background-color: #000000;
+  /* white lines */
+  margin: 3px 0;
+}
+
+.hover{
+  z-index: 1000;
+  position: fixed;
+  top: 0;
+  right: .5rem;
+}
+
+.rightSidebar{
+  position: fixed;
+  top: 0;
+  right: 5px;
+  width: 300px;
+  height: max-content;
+  margin-top: 3rem;
+  background-color: #f8f9fa;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  padding: 20px;
+  z-index: 1000;
 }

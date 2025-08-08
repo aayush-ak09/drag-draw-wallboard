@@ -52,6 +52,11 @@ export class DDdashboard implements AfterViewInit {
 
   selectedStats: [string, string][] = [];
   selectedTable: any;
+  showCustomOption: boolean = false;
+
+  showCustomOptions(): void {
+    this.showCustomOption = !this.showCustomOption;
+  }
 
   ngAfterViewInit(): void {
 
@@ -111,7 +116,7 @@ export class DDdashboard implements AfterViewInit {
         chooseButton.addEventListener('click', () => this.openDataPicker(el));
       }
       if (deleteButton) {
-          deleteButton.addEventListener('click', () => this.grid.removeWidget(el, true));
+        deleteButton.addEventListener('click', () => this.grid.removeWidget(el, true));
       }
     });
   }
@@ -157,8 +162,8 @@ export class DDdashboard implements AfterViewInit {
         chooseButton.addEventListener('click', () => this.openDataPicker(widget));
       }
       if (deleteButton) {
-        deleteButton.addEventListener('click', () => 
-        this.grid.removeWidget(widget, true));
+        deleteButton.addEventListener('click', () =>
+          this.grid.removeWidget(widget, true));
       }
     });
   }
@@ -197,11 +202,11 @@ export class DDdashboard implements AfterViewInit {
 
 
   showLayout(): void {
-  this.drawModeONN = false;
-  this.grid.removeAll(false);
-  const items = this.gridContainer.nativeElement.querySelectorAll('.grid-stack-item');
-  items.forEach((el: Element) => el.remove());
-  this.loadLayout();
+    this.drawModeONN = false;
+    this.grid.removeAll(false);
+    const items = this.gridContainer.nativeElement.querySelectorAll('.grid-stack-item');
+    items.forEach((el: Element) => el.remove());
+    this.loadLayout();
   }
 
 
