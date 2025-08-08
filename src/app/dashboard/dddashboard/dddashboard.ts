@@ -58,16 +58,19 @@ export class DDdashboard implements AfterViewInit {
     this.showCustomOption = !this.showCustomOption;
   }
 
+  movetoCustomize(){
+    this.drawModeONN = true;
+    this.showCustomOption = false;
+    this.activeTab = 'design';
+  }
+
   ngAfterViewInit(): void {
 
     const totalRows = 48;
-
     const topBarHeight = document.querySelector('.control-center')?.clientHeight || 0;
     const verticalMargins = 16;
     const availableHeight = window.innerHeight - topBarHeight - verticalMargins;
-
     const dynamicCellHeight = Math.floor(availableHeight / totalRows);
-
     const options: GridStackOptions = {
       cellHeight: dynamicCellHeight + 'px',
       float: true,
@@ -170,6 +173,7 @@ export class DDdashboard implements AfterViewInit {
 
 
   saveLayout(): void {
+    this.showCustomOptions();
     const widgets = this.grid.engine.nodes.map(node => {
       const el = node.el!;
       const bodyEl = el.querySelector('.widget-body') as HTMLElement;
