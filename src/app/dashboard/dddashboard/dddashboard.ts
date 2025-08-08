@@ -111,7 +111,7 @@ export class DDdashboard implements AfterViewInit {
         chooseButton.addEventListener('click', () => this.openDataPicker(el));
       }
       if (deleteButton) {
-        deleteButton.addEventListener('click', () => this.grid.removeWidget(el));
+          deleteButton.addEventListener('click', () => this.grid.removeWidget(el, true));
       }
     });
   }
@@ -157,7 +157,8 @@ export class DDdashboard implements AfterViewInit {
         chooseButton.addEventListener('click', () => this.openDataPicker(widget));
       }
       if (deleteButton) {
-        deleteButton.addEventListener('click', () => widget.remove());
+        deleteButton.addEventListener('click', () => 
+        this.grid.removeWidget(widget, true));
       }
     });
   }
@@ -196,9 +197,11 @@ export class DDdashboard implements AfterViewInit {
 
 
   showLayout(): void {
-    this.drawModeONN = false;
-    this.grid.removeAll(false);
-    this.loadLayout();
+  this.drawModeONN = false;
+  this.grid.removeAll(false);
+  const items = this.gridContainer.nativeElement.querySelectorAll('.grid-stack-item');
+  items.forEach((el: Element) => el.remove());
+  this.loadLayout();
   }
 
 
