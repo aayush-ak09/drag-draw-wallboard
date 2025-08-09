@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, inject, ViewContainerRef, HostListener } from '@angular/core';
-import { GridStack, GridStackOptions, GridStackWidget } from 'gridstack';
+import { GridStack, GridStackOptions } from 'gridstack';
 import { CommonModule } from '@angular/common';
 import { GraphComponent } from '../graph-component/graph-component';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +7,6 @@ import { DonutChart } from '../../components/donut-chart/donut-chart';
 import { GaugeChartComponent } from '../../components/gauge-chart/gauge-chart';
 import { JoyBigGaugeChartComponent } from '../../components/joy-big-gauge/joy-big-gauge-chart.component';
 import { Barchart } from '../../components/barchart/barchart';
-import { PredefinedLayout } from '../../Services/layouts'
 import { DataPickerModalComponent } from '../../utilities/data-picker-modal/data-picker-modal';
 import { DesignConfig } from '../../Services/interfaces';
 
@@ -18,7 +17,6 @@ import { DesignConfig } from '../../Services/interfaces';
   styleUrls: ['./dddashboard.css'],
   imports: [CommonModule, FormsModule, DataPickerModalComponent]
 })
-
 export class DDdashboard implements AfterViewInit {
   activeTab: 'data' | 'design' = 'data';
 
@@ -37,7 +35,6 @@ export class DDdashboard implements AfterViewInit {
     }
   };
 
-
   chartTypes = [
     { value: 'donut', label: 'Donut Chart' },
     { value: 'gauge', label: 'Simple Gauge' },
@@ -46,40 +43,197 @@ export class DDdashboard implements AfterViewInit {
   ];
 
   @ViewChild('gridContainer', { static: true }) gridContainer!: ElementRef;
-  drawModeONN: boolean = true;
+  drawModeONN: boolean = true; // true = customize mode, false = preview mode
   private grid!: GridStack;
   private viewContainerRef = inject(ViewContainerRef);
 
   selectedStats: [string, string][] = [];
   selectedTable: any;
   showCustomOption: boolean = false;
-
+  
   showCustomOptions(): void {
     this.showCustomOption = !this.showCustomOption;
   }
 
-  movetoCustomize(){
+  private clearGridDom(): void {
+    if (!this.gridContainer?.nativeElement) return;
+    const items = this.gridContainer.nativeElement.querySelectorAll('.grid-stack-item');
+    items.forEach((el: Element) => el.remove());
+    if (this.grid) this.grid.removeAll(false);
+  }
+
+  private getSavedLayout(): any[] | null {
+    const raw = localStorage.getItem('my-dashboard-layout');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Build a widget DOM for either edit or preview */
+  private buildWidgetFromItem(item: any, mode: 'edit' | 'preview'): HTMLElement {
+    const widget = document.createElement('div');
+    widget.classList.add('grid-stack-item');
+    widget.setAttribute('gs-x', String(item.x));
+    widget.setAttribute('gs-y', String(item.y));
+    widget.setAttribute('gs-w', String(item.w));
+    widget.setAttribute('gs-h', String(item.h));
+
+    const content = document.createElement('div');
+    content.classList.add('grid-stack-item-content');
+
+    // Toolbar present only in edit mode
+    const toolbar = document.createElement('div');
+    if (mode === 'edit') {
+      toolbar.className = 'widget-toolbar';
+      toolbar.innerHTML = `
+        <button class="choose-data-btn">Choose Data</button>
+        <button class="delete-widget-btn">🗑️</button>
+      `;
+    }
+
+    const body = document.createElement('div');
+    body.className = 'widget-body';
+    Object.assign(body.style, {
+      backgroundColor: item.style?.bgColor,
+      color: item.style?.textColor,
+      textAlign: (item.style?.textAlign as CanvasTextAlign) || '',
+      fontFamily: item.style?.fontFamily,
+      fontSize: item.style?.fontSize
+    });
+
+    const chartType = item.chartType;
+    const config = item.config || {};
+    body.dataset['chartType'] = chartType || 'text';
+    body.dataset['chartConfig'] = JSON.stringify(config);
+
+    // Inject component/content
+    let compRef: any;
+    switch (chartType) {
+      case 'donut':
+        compRef = this.viewContainerRef.createComponent(DonutChart);
+        compRef.instance.labels = config.labels || ['A', 'B', 'C'];
+        compRef.instance.values = config.values || [50, 30, 20];
+        compRef.instance.colors = config.colors || ['#FF6384', '#36A2EB', '#FFCE56'];
+        break;
+
+      case 'gauge':
+        compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
+        compRef.instance.value = config.value || 0;
+        compRef.instance.label = config.label || 'Gauge';
+        break;
+
+      case 'biggauge':
+        compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
+        compRef.instance.value = config.value || 0;
+        compRef.instance.header_text = config.header_text || 'Title';
+        break;
+
+      case 'barchart':
+        compRef = this.viewContainerRef.createComponent(Barchart);
+        compRef.instance.labels = config.labels || ['Q1', 'Q2', 'Q3', 'Q4'];
+        compRef.instance.values = config.values || [120, 150, 180, 200];
+        compRef.instance.colors = config.colors || ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'];
+        break;
+
+      default:
+        if (config?.stats?.length) {
+          body.innerHTML = config.stats
+            .map((stat: [string, string]) => `
+              <div class="stat-block">
+                <h4>${stat[0]}</h4>
+                <p>${stat[1]}</p>
+              </div>
+            `).join('');
+          Object.assign(body.style, {
+            display: 'flex',
+            flexDirection: config.layoutDirection,
+            gap: '12px',
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            justifyContent: config.layoutDirection === 'row' ? 'space-between' : 'flex-start'
+          });
+        } else {
+          body.innerHTML = '<p>No content available</p>';
+        }
+        break;
+    }
+
+    if (compRef) {
+      body.appendChild(compRef.location.nativeElement);
+    }
+
+    content.appendChild(toolbar);
+    content.appendChild(body);
+    widget.appendChild(content);
+
+    // Attach handlers only in edit mode
+    if (mode === 'edit') this.attachWidgetHandlers(widget);
+
+    return widget;
+  }
+
+  /** Attach choose/delete actions to a widget (edit mode) */
+  private attachWidgetHandlers(el: HTMLElement): void {
+    setTimeout(() => {
+      const chooseButton = el.querySelector('.choose-data-btn');
+      const deleteButton = el.querySelector('.delete-widget-btn');
+
+      if (chooseButton) {
+        chooseButton.addEventListener('click', () => this.openDataPicker(el as HTMLElement));
+      }
+      if (deleteButton) {
+        deleteButton.addEventListener('click', () => this.grid.removeWidget(el, true));
+      }
+    });
+  }
+
+  /** Render from saved layout in either preview or edit */
+  private renderFromSaved(mode: 'preview' | 'edit'): void {
+    const widgets = this.getSavedLayout();
+    this.clearGridDom();
+
+    if (!widgets || !widgets.length) return;
+
+    widgets.forEach(item => {
+      const widget = this.buildWidgetFromItem(item, mode);
+      this.gridContainer.nativeElement.appendChild(widget);
+      this.grid.makeWidget(widget);
+    });
+  }
+
+  movetoCustomize() {
+    // Switch back to edit/customize mode
     this.drawModeONN = true;
     this.showCustomOption = false;
     this.activeTab = 'design';
+
+    if (this.grid) this.grid.setStatic(false);
+
+    // Re-render the saved layout BUT with toolbars + handlers
+    this.renderFromSaved('edit');
   }
 
   ngAfterViewInit(): void {
-
     const totalRows = 48;
     const topBarHeight = document.querySelector('.control-center')?.clientHeight || 0;
     const verticalMargins = 16;
     const availableHeight = window.innerHeight - topBarHeight - verticalMargins;
     const dynamicCellHeight = Math.floor(availableHeight / totalRows);
+
     const options: GridStackOptions = {
       cellHeight: dynamicCellHeight + 'px',
       float: true,
       column: 48,
       margin: 5,
+      staticGrid: !this.drawModeONN ? true : false
     };
 
     this.grid = GridStack.init(options, this.gridContainer.nativeElement);
 
+    // initial widget (only on first load + edit mode)
     const el = document.createElement('div');
     el.classList.add('grid-stack-item');
     el.setAttribute('gs-x', '0');
@@ -93,15 +247,14 @@ export class DDdashboard implements AfterViewInit {
     const toolbar = document.createElement('div');
     toolbar.className = 'widget-toolbar';
     toolbar.innerHTML = `
-    <button class="choose-data-btn">Choose Data</button>
-    <button class="delete-widget-btn">🗑️</button>
-  `;
+      <button class="choose-data-btn">Choose Data</button>
+      <button class="delete-widget-btn">🗑️</button>
+    `;
 
     const body = document.createElement('div');
     body.className = 'widget-body';
     body.style.padding = '10px';
 
-    // Dynamically inject GraphComponent
     const compRef = this.viewContainerRef.createComponent(GraphComponent);
     compRef.instance.name = '🛈 Click “Choose Data” to configure this widget.';
     body.appendChild(compRef.location.nativeElement);
@@ -111,19 +264,8 @@ export class DDdashboard implements AfterViewInit {
     el.appendChild(content);
     this.grid.makeWidget(el);
 
-    setTimeout(() => {
-      const chooseButton = el.querySelector('.choose-data-btn');
-      const deleteButton = el.querySelector('.delete-widget-btn');
-
-      if (chooseButton) {
-        chooseButton.addEventListener('click', () => this.openDataPicker(el));
-      }
-      if (deleteButton) {
-        deleteButton.addEventListener('click', () => this.grid.removeWidget(el, true));
-      }
-    });
+    this.attachWidgetHandlers(el);
   }
-
 
   addWidget(): void {
     const widget = document.createElement('div');
@@ -139,9 +281,9 @@ export class DDdashboard implements AfterViewInit {
     const toolbar = document.createElement('div');
     toolbar.className = 'widget-toolbar';
     toolbar.innerHTML = `
-    <button class="choose-data-btn">Choose Data</button>
-    <button class="delete-widget-btn">🗑️</button>
-  `;
+      <button class="choose-data-btn">Choose Data</button>
+      <button class="delete-widget-btn">🗑️</button>
+    `;
 
     const body = document.createElement('div');
     body.className = 'widget-body';
@@ -157,20 +299,8 @@ export class DDdashboard implements AfterViewInit {
     this.gridContainer.nativeElement.appendChild(widget);
     this.grid.makeWidget(widget);
 
-    setTimeout(() => {
-      const chooseButton = widget.querySelector('.choose-data-btn');
-      const deleteButton = widget.querySelector('.delete-widget-btn');
-
-      if (chooseButton) {
-        chooseButton.addEventListener('click', () => this.openDataPicker(widget));
-      }
-      if (deleteButton) {
-        deleteButton.addEventListener('click', () =>
-          this.grid.removeWidget(widget, true));
-      }
-    });
+    this.attachWidgetHandlers(widget);
   }
-
 
   saveLayout(): void {
     this.showCustomOptions();
@@ -184,10 +314,7 @@ export class DDdashboard implements AfterViewInit {
       const config = chartConfigRaw ? JSON.parse(chartConfigRaw) : {};
 
       return {
-        x: node.x,
-        y: node.y,
-        w: node.w,
-        h: node.h,
+        x: node.x, y: node.y, w: node.w, h: node.h,
         chartType,
         config,
         style: {
@@ -204,130 +331,18 @@ export class DDdashboard implements AfterViewInit {
     console.log('Layout saved:', widgets);
   }
 
-
   showLayout(): void {
     this.drawModeONN = false;
-    this.grid.removeAll(false);
-    const items = this.gridContainer.nativeElement.querySelectorAll('.grid-stack-item');
-    items.forEach((el: Element) => el.remove());
-    this.loadLayout();
-  }
+    if (this.grid) this.grid.setStatic(true);
 
+    // Render saved layout for preview (no toolbars or handlers)
+    this.renderFromSaved('preview');
+  }
 
   loadLayout(): void {
-    const raw = localStorage.getItem('my-dashboard-layout');
-    if (raw) {
-      const widgets = JSON.parse(raw);
-      this.grid.removeAll(false);
-
-      widgets.forEach((item: any) => {
-        const widget = document.createElement('div');
-        widget.classList.add('grid-stack-item');
-        widget.setAttribute('gs-x', item.x);
-        widget.setAttribute('gs-y', item.y);
-        widget.setAttribute('gs-w', item.w);
-        widget.setAttribute('gs-h', item.h);
-
-        const content = document.createElement('div');
-        content.classList.add('grid-stack-item-content');
-
-        const toolbar = document.createElement('div');
-        // In preview mode, no toolbar is needed.
-        // You can add it back if you want to allow edits.
-
-        const body = document.createElement('div');
-        body.className = 'widget-body';
-        Object.assign(body.style, {
-          backgroundColor: item.style.bgColor,
-          color: item.style.textColor,
-          textAlign: item.style.textAlign as CanvasTextAlign,
-          fontFamily: item.style.fontFamily,
-          fontSize: item.style.fontSize
-        });
-
-        // Set metadata for potential future edits
-        body.dataset['chartType'] = item.chartType;
-        body.dataset['chartConfig'] = JSON.stringify(item.config || {});
-
-        let compRef: any;
-        const config = item.config || {};
-
-        switch (item.chartType) {
-          case 'donut':
-            compRef = this.viewContainerRef.createComponent(DonutChart);
-            compRef.instance.labels = config.labels || ['A', 'B', 'C'];
-            compRef.instance.values = config.values || [50, 30, 20];
-            compRef.instance.colors = config.colors || ['#FF6384', '#36A2EB', '#FFCE56'];
-            break;
-
-          case 'gauge':
-            compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
-            compRef.instance.value = config.value || 0;
-            compRef.instance.label = config.label || 'Gauge';
-            break;
-
-          case 'biggauge':
-            compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
-            compRef.instance.value = config.value || 0;
-            compRef.instance.header_text = config.header_text || 'Title';
-            break;
-
-          case 'barchart':
-            compRef = this.viewContainerRef.createComponent(Barchart);
-            compRef.instance.labels = config.labels || ['Q1', 'Q2', 'Q3', 'Q4'];
-            compRef.instance.values = config.values || [120, 150, 180, 200];
-            compRef.instance.colors = config.colors || ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'];
-            break;
-
-          default:
-            if (item.config?.stats?.length) {
-              body.innerHTML = item.config.stats
-                .map((stat: [string, string]) => `
-                <div class="stat-block">
-                  <h4>${stat[0]}</h4>
-                  <p>${stat[1]}</p>
-                </div>
-              `)
-                .join('');
-
-              // Apply saved layout styling
-              Object.assign(body.style, {
-                display: 'flex',
-                flexDirection: item.config.layoutDirection, // This is the crucial fix
-                gap: '12px',
-                flexWrap: 'wrap',
-                alignItems: 'flex-start',
-                justifyContent: item.config.layoutDirection === 'row' ? 'space-between' : 'flex-start'
-              });
-
-            } else {
-              body.innerHTML = '<p>No content available</p>';
-            }
-            break;
-        }
-
-        if (compRef) {
-          body.appendChild(compRef.location.nativeElement);
-        }
-
-        content.appendChild(toolbar);
-        content.appendChild(body);
-        widget.appendChild(content);
-        this.gridContainer.nativeElement.appendChild(widget);
-        this.grid.makeWidget(widget);
-
-        setTimeout(() => {
-          const chooseButton = widget.querySelector('.choose-data-btn');
-          if (chooseButton) {
-            chooseButton.addEventListener('click', () => this.openDataPicker(widget));
-          }
-        });
-      });
-    }
+    // Preserved original method (used by your code path)
+    this.renderFromSaved(this.drawModeONN ? 'edit' : 'preview');
   }
-
-
-
 
   selectedWidgetEl: HTMLElement | null = null;
   showDataPicker = false;
@@ -346,8 +361,6 @@ export class DDdashboard implements AfterViewInit {
     }
   }
 
-
-
   selectStat(stat: [string, string]) {
     if (this.selectedWidgetEl) {
       const body = this.selectedWidgetEl.querySelector('.widget-body');
@@ -364,7 +377,6 @@ export class DDdashboard implements AfterViewInit {
       const body = this.selectedWidgetEl.querySelector('.widget-body');
       if (body) {
         const headers = Object.keys(tableData[0]);
-
         const headerRow = headers.map(h => `<th>${h}</th>`).join('');
         const rows = tableData
           .map((row: { [key: string]: any }) =>
@@ -373,17 +385,16 @@ export class DDdashboard implements AfterViewInit {
           .join('');
 
         const tableHTML = `
-        <table style="width:100%; border-collapse: collapse;" border="1">
-          <thead><tr>${headerRow}</tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-        body.innerHTML = tableHTML;
+          <table style="width:100%; border-collapse: collapse;" border="1">
+            <thead><tr>${headerRow}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+        (body as HTMLElement).innerHTML = tableHTML;
       }
     } else {
       console.warn('No data found for table:', tableKey);
     }
-
     this.closeDataPicker();
   }
 
@@ -392,10 +403,8 @@ export class DDdashboard implements AfterViewInit {
 
     const widgetEl = this.selectedWidgetEl;
     const body = widgetEl.querySelector('.widget-body') as HTMLElement;
-
     if (!body) return;
 
-    // Clear existing content
     body.innerHTML = '';
 
     let compRef: any;
@@ -406,11 +415,7 @@ export class DDdashboard implements AfterViewInit {
     switch (this.design.chartType) {
       case 'donut':
         compRef = this.viewContainerRef.createComponent(DonutChart);
-        config = {
-          labels: ['A', 'B', 'C'],
-          values: [50, 30, 20],
-          colors: ['#FF6384', '#36A2EB', '#FFCE56']
-        };
+        config = { labels: ['A', 'B', 'C'], values: [50, 30, 20], colors: ['#FF6384', '#36A2EB', '#FFCE56'] };
         compRef.instance.labels = config.labels;
         compRef.instance.values = config.values;
         compRef.instance.colors = config.colors;
@@ -418,10 +423,7 @@ export class DDdashboard implements AfterViewInit {
 
       case 'gauge':
         compRef = this.viewContainerRef.createComponent(GaugeChartComponent);
-        config = {
-          value: 65,
-          label: 'Performance'
-        };
+        config = { value: 65, label: 'Performance' };
         compRef.instance.value = config.value;
         compRef.instance.label = config.label;
         width = 8;
@@ -430,10 +432,7 @@ export class DDdashboard implements AfterViewInit {
 
       case 'biggauge':
         compRef = this.viewContainerRef.createComponent(JoyBigGaugeChartComponent);
-        config = {
-          value: 72,
-          header_text: 'Service Level'
-        };
+        config = { value: 72, header_text: 'Service Level' };
         compRef.instance.value = config.value;
         compRef.instance.header_text = config.header_text;
         width = 16;
@@ -442,11 +441,7 @@ export class DDdashboard implements AfterViewInit {
 
       case 'barchart':
         compRef = this.viewContainerRef.createComponent(Barchart);
-        config = {
-          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-          values: [120, 150, 180, 200],
-          colors: ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9']
-        };
+        config = { labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [120, 150, 180, 200], colors: ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9'] };
         compRef.instance.labels = config.labels;
         compRef.instance.values = config.values;
         compRef.instance.colors = config.colors;
@@ -459,20 +454,13 @@ export class DDdashboard implements AfterViewInit {
 
     if (compRef) {
       body.appendChild(compRef.location.nativeElement);
-
-      // Save metadata for restoring layout later
       body.dataset['chartType'] = this.design.chartType;
       body.dataset['chartConfig'] = JSON.stringify(config);
-
-      // Dynamically update widget size
       this.grid.update(widgetEl, { w: width, h: height });
     }
 
     this.closeDataPicker();
   }
-
-
-
 
   closeDataPicker(): void {
     this.showDataPicker = false;
@@ -483,77 +471,49 @@ export class DDdashboard implements AfterViewInit {
     return Object.keys(this.templateInput.tables);
   }
 
-  // data structure is here 
   applyCustomDesign(): void {
     if (this.selectedWidgetEl) {
       const body = this.selectedWidgetEl.querySelector('.widget-body') as HTMLElement;
       if (body && this.design) {
-        if (this.design.bgColor) {
-          body.style.backgroundColor = this.design.bgColor;
-        }
-
-        if (this.design.textColor) {
-          body.style.color = this.design.textColor;
-        }
-
-        if (this.design.textAlign) {
-          body.style.textAlign = this.design.textAlign as CanvasTextAlign;  // Or just string if you're unsure
-        }
-
-        if (this.design.fontFamily) {
-          body.style.fontFamily = this.design.fontFamily;
-        }
-        if (this.design.fontSize !== undefined) {
-          body.style.fontSize = `${this.design.fontSize}px`;
-        }
+        if (this.design.bgColor) body.style.backgroundColor = this.design.bgColor;
+        if (this.design.textColor) body.style.color = this.design.textColor;
+        if (this.design.textAlign) body.style.textAlign = this.design.textAlign as CanvasTextAlign;
+        if (this.design.fontFamily) body.style.fontFamily = this.design.fontFamily;
+        if (this.design.fontSize !== undefined) body.style.fontSize = `${this.design.fontSize}px`;
       }
     }
   }
 
-
   handleStatsApplied(event: any): void {
-    console.log('Stats Applied:', event);
     this.selectedStats = event;
-    this.applySelectedStats()
+    this.applySelectedStats();
   }
 
   handleChartSelected(chartType: string): void {
-    console.log("Chart selected:", chartType);
     this.design.chartType = chartType;
     this.applyChartSelection();
   }
 
   handleDesignApplied(event: DesignConfig): void {
-    console.log('Design Config Applied:', event);
     this.design = event;
     this.applyCustomDesign();
   }
 
   handleTableSelected(event: any): void {
-    console.log('Table Selected:', event);
     this.selectedTable = event;
     this.selectTable(this.selectedTable);
   }
 
-
-
-
   toggleStatSelection(stat: [string, string]): void {
-    const index = this.selectedStats.findIndex(
-      s => s[0] === stat[0] && s[1] === stat[1]
-    );
-    if (index !== -1) {
-      this.selectedStats.splice(index, 1);
-    } else {
-      this.selectedStats.push(stat);
-    }
+    const index = this.selectedStats.findIndex(s => s[0] === stat[0] && s[1] === stat[1]);
+    if (index !== -1) this.selectedStats.splice(index, 1);
+    else this.selectedStats.push(stat);
   }
 
   isStatSelected(stat: [string, string]): boolean {
-    return this.selectedStats.some(
-      s => s[0] === stat[0] && s[1] === stat[1]
-    );
+    return this.selectedStats.some(s => s[0] === stat[0] && s[1] === stat[1]);
   }
+
   applySelectedStats(): void {
     if (this.selectedWidgetEl && this.selectedStats.length > 0) {
       const widgetEl = this.selectedWidgetEl;
@@ -561,23 +521,19 @@ export class DDdashboard implements AfterViewInit {
       const toolbar = widgetEl.querySelector('.widget-toolbar') as HTMLElement;
 
       if (body) {
-        // Clear existing content and render stat blocks
-        body.innerHTML = this.selectedStats
-          .map(stat => `
+        body.innerHTML = this.selectedStats.map(stat => `
           <div class="stat-block">
             <h4>${stat[0]}</h4>
             <p>${stat[1]}</p>
           </div>
         `).join('');
 
-        // Save config with the correct layout direction
         body.dataset['chartType'] = 'text';
         body.dataset['chartConfig'] = JSON.stringify({
           stats: this.selectedStats,
-          layoutDirection: this.design.layoutDirection // This will be 'row' or 'column'
+          layoutDirection: this.design.layoutDirection
         });
 
-        // Apply layout styling
         Object.assign(body.style, {
           display: 'flex',
           flexDirection: this.design.layoutDirection === 'horizontal' ? 'row' : 'column',
@@ -587,7 +543,6 @@ export class DDdashboard implements AfterViewInit {
           justifyContent: this.design.layoutDirection === 'horizontal' ? 'space-between' : 'flex-start'
         });
 
-        // Get grid cell height
         let cellHeight = 14.75;
         const gridEl = document.querySelector('.grid-stack') as HTMLElement;
         if (gridEl) {
@@ -596,21 +551,12 @@ export class DDdashboard implements AfterViewInit {
           if (!isNaN(parsed)) cellHeight = parsed;
         }
 
-        // Auto width & height
-        const statCount = this.selectedStats.length;
-        let w = 5;
-        let h = 4;
-
-        if (this.design.layoutDirection === 'horizontal') {
-          w = Math.min(6 * statCount, 24);
-        } else { // 'column'
-          w = 5;
-        }
-
-        // Adjust height for both layouts based on content
         const contentHeight = body.scrollHeight + (toolbar?.offsetHeight || 0) + 20;
-        h = Math.ceil(contentHeight / cellHeight);
-
+        const h = Math.ceil(contentHeight / cellHeight);
+        let w = 5;
+        if (this.design.layoutDirection === 'horizontal') {
+          w = Math.min(6 * this.selectedStats.length, 24);
+        }
         this.grid.update(widgetEl, { w, h });
       }
     }
@@ -618,7 +564,6 @@ export class DDdashboard implements AfterViewInit {
     this.selectedStats = [];
     this.closeDataPicker();
   }
-
 
   @HostListener('window:resize')
   onResize() {
@@ -629,10 +574,8 @@ export class DDdashboard implements AfterViewInit {
     this.grid.cellHeight(newCellHeight);
   }
 
-
-
   predefLayouts() {
-
+    // future: load predefined locked layouts here
   }
 
   templateInput: any = {

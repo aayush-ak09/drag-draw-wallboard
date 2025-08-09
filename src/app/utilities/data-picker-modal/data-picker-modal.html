@@ -1,9 +1,9 @@
-<div class="data-picker-modal" *ngIf="showDataPicker">
+<div class="data-picker-modal" *ngIf="show && !selectedWidgetType">
   <div class="data-picker-content">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
       <h3 style="margin: 0;">Select Widget Type:</h3>
       <button style="border: none; background: transparent; font-size: 1.2rem; cursor: pointer;" title="Close"
-        (click)="closeModal()">
+              (click)="closeModal()">
         ✖
       </button>
     </div>
@@ -16,64 +16,15 @@
   </div>
 </div>
 
-
-
-<div class="data-picker-modal" *ngIf="selectedWidgetType==='single-stat' || selectedWidgetType==='multi-stat'">
+<div class="data-picker-modal" *ngIf="show && (selectedWidgetType==='single-stat' || selectedWidgetType==='multi-stat' || selectedWidgetType==='chart' || selectedWidgetType==='table')">
   <div class="data-picker-content">
     <!-- Tab Header -->
     <div class="tab-header">
       <button class="tab" [class.active]="activeTab === 'data'" (click)="activeTab = 'data'">📊 Select Data</button>
-      <button class="tab" [class.active]="activeTab === 'design'" (click)="activeTab = 'design'">🎨 Custom
-        Design</button>
+      <button class="tab" [class.active]="activeTab === 'design'" (click)="activeTab = 'design'">🎨 Custom Design</button>
+      <button style="margin-left:auto;border:none;background:transparent;font-size:1.1rem;cursor:pointer" (click)="closeModal()">✖</button>
     </div>
 
-    <!-- form here  -->
-
-    <!-- Select Data Tab -->
-    <div *ngIf="activeTab === 'data'" class="design-body">
-
-      <h3>Chart Stats:</h3>
-      <ul>
-        <li *ngFor="let chart of chartTypes" (click)="design.chartType = chart.value; applyChartSelection()">
-          {{ chart.label }}
-        </li>
-      </ul>
-
-      <h3>Box Stats:</h3>
-      <ul>
-        <li *ngFor="let stat of templateInput.Stats" (click)="toggleStatSelection(stat)"
-          [class.selected]="isStatSelected(stat)">
-          {{ stat[0] }} — {{ stat[1] }}
-        </li>
-      </ul>
-
-      <div class="form-group">
-        <label for="layout">Layout:</label>
-        <select [(ngModel)]="design.layoutDirection" id="layout">
-          <option value="row">Vertical</option>
-          <option value="horizontal">Horizontal</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <input type="checkbox" id="applyCheckbox" checked />
-        <label for="applyCheckbox">Apply Selected</label>
-        <button class="apply-btn" (click)="applySelectedStats()">Apply</button>
-      </div>
-
-      <h3>Tables:</h3>
-      <ul>
-        <li *ngFor="let key of tableKeys()" (click)="selectTable(key)">
-          {{ key }}
-        </li>
-      </ul>
-    </div>
-
-
-
-    <!-- to here  -->
-
-    <!-- Select Data Tab -->
     <div *ngIf="activeTab === 'data'" class="design-body">
       <h3>Chart Stats:</h3>
       <ul>
@@ -84,8 +35,8 @@
 
       <h3>Box Stats:</h3>
       <ul>
-        <li *ngFor="let stat of templateInput.Stats" (click)="toggleStatSelection(stat)"
-          [class.selected]="isStatSelected(stat)">
+        <li *ngFor="let stat of templateInput?.Stats" (click)="toggleStatSelection(stat)"
+            [class.selected]="isStatSelected(stat)">
           {{ stat[0] }} — {{ stat[1] }}
         </li>
       </ul>

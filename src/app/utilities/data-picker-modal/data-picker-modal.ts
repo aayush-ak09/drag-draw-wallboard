@@ -1,12 +1,13 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChange, SimpleChanges } from '@angular/core';
-import { DesignConfig } from '../../Services/interfaces'
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { DesignConfig } from '../../Services/interfaces';
 @Component({
   selector: 'app-data-picker-modal',
   imports: [FormsModule, CommonModule],
   templateUrl: './data-picker-modal.html',
   styleUrl: './data-picker-modal.css',
+  standalone: true
 })
 export class DataPickerModalComponent implements OnChanges {
   @Input() show: boolean = false;
@@ -23,44 +24,59 @@ export class DataPickerModalComponent implements OnChanges {
 
   activeTab: 'data' | 'design' = 'data';
   selectedWidgetType: string = '';
-  showDataPicker: boolean = false;
 
+  widgetTypes = [
+    { type: 'single-stat', label: '📊 Single Stat' },
+    { type: 'multi-stat',  label: '📈 Multi Stat' },
+    { type: 'chart',       label: '📉 Chart' },
+    { type: 'graph',       label: '📌 Graph' },
+    { type: 'table',       label: '📋 Table' },
+    { type: 'logoHeader',  label: '🖼 Logo' },
+    { type: 'widget',      label: '🔢 Widget' }
+  ];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // When the modal is opened, reset to the first step
+    if (changes['show'] && this.show) {
+      this.activeTab = 'data';
+      // keep whatever was selected previously? If not, reset:
+      // this.selectedStats = [...this.selectedStats]; // already an array
+      // reset step 1 vs step 2 flow if needed
+      if (!this.selectedWidgetType) {
+        // stay on step 1
+      }
+    }
+  }
+
+  // Step 1
   selectWidgetType(type: string): void {
     this.selectedWidgetType = type;
   }
 
-  widgetTypes = [
-    { type: 'single-stat', label: '📊 Single Stat' },
-    { type: 'multi-stat', label: '📈 Multi Stat' },
-    { type: 'chart', label: '📉 Chart' },
-    { type: 'graph', label: '📌 Graph' },
-    { type: 'table', label: '📋 Table' },
-    { type: 'logoHeader', label: '🖼 Logo' },
-    { type: 'widget', label: '🔢 Widget' }
-  ];
-
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['show']) {
-      this.showDataPicker = this.show;
-    }
-  }
+  // Close handlers
   closeModal(): void {
-    this.showDataPicker = false;
-    this.modalClosed.emit(); // notify parent to update `showDataPicker = false`
+    this.selectedWidgetType = '';
+    this.modalClosed.emit();
   }
 
+  closeDataPicker(): void {
+    this.selectedWidgetType = '';
+    this.modalClosed.emit();
+  }
+
+  // Data actions
   toggleStatSelection(stat: any): void {
-    const index = this.selectedStats.findIndex(s => s[0] === stat[0]);
+    const index = this.selectedStats.findIndex(s => s[0] === stat[0] && s[1] === stat[1]);
     if (index >= 0) {
-      this.selectedStats.splice(index, 1);
+      this.selectedStats = this.selectedStats.filter((_, i) => i !== index);
     } else {
-      this.selectedStats.push(stat);
+      this.selectedStats = [...this.selectedStats, stat];
     }
   }
 
   isStatSelected(stat: any): boolean {
-    return this.selectedStats.some(s => s[0] === stat[0]);
+    return this.selectedStats.some(s => s[0] === stat[0] && s[1] === stat[1]);
+    // note: compare both tuple entries to avoid accidental collisions
   }
 
   applySelectedStats(): void {
@@ -74,9 +90,9 @@ export class DataPickerModalComponent implements OnChanges {
   }
 
   applyChartSelection(): void {
-    this.chartSelected.emit(this.design.chartType); // emit the selected chartType
+    // emit the selected chart type from design
+    this.chartSelected.emit(this.design.chartType);
   }
-
 
   selectedTable: string | null = null;
 
@@ -86,14 +102,7 @@ export class DataPickerModalComponent implements OnChanges {
     this.closeDataPicker();
   }
 
-
   tableKeys(): string[] {
     return this.templateInput ? Object.keys(this.templateInput?.tables || {}) : [];
-  }
-
-  closeDataPicker(): void {
-    this.modalClosed.emit();
-    this.showDataPicker = false;
-    this.selectedWidgetType = '';
   }
 }
