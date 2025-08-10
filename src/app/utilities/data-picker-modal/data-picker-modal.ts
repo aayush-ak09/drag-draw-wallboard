@@ -62,11 +62,6 @@ export class DataPickerModalComponent implements OnChanges {
     }
   }
 
-  // Step 1
-  selectWidgetType(type: string): void {
-    this.selectedWidgetType = type;
-  }
-
   // Close handlers
   closeModal(): void {
     this.selectedWidgetType = '';
