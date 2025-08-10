@@ -19,7 +19,7 @@
   <button (click)="movetoCustomize()"> Customize</button>
 </div>
 
-<div #gridContainer class="grid-stack"></div>
+<div #gridContainer class="grid-stack" [class.preview-mode]="!drawModeONN"></div>
 
 <app-data-picker-modal
   [show]="showDataPicker"
