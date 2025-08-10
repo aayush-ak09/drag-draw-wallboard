@@ -14,12 +14,14 @@ export class DataPickerModalComponent implements OnChanges {
   @Input() chartTypes: { label: string, value: string }[] = [];
   @Input() design: DesignConfig = {};
   @Input() selectedStats: any[] = [];
+  @Input() clocktype: string | null = null;
 
   @Output() designApplied = new EventEmitter<DesignConfig>();
   @Output() statsApplied = new EventEmitter<any[]>();
   @Output() tableSelected = new EventEmitter<string>();
   @Output() modalClosed = new EventEmitter<void>();
   @Output() chartSelected = new EventEmitter<string>();
+  @Output() clockSelectedEvent = new EventEmitter<string>();
 
   activeTab: 'data' | 'design' = 'data';
   selectedWidgetType: string = '';
@@ -27,6 +29,7 @@ export class DataPickerModalComponent implements OnChanges {
 
   selectWidgetType(type: string): void {
     this.selectedWidgetType = type;
+    this.showDataPicker=false;
   }
 
   widgetTypes = [
@@ -38,6 +41,11 @@ export class DataPickerModalComponent implements OnChanges {
     { type: 'logoHeader', label: '🖼 Logo' },
     { type: 'widget', label: '🔢 Widget' }
   ];
+
+  clockSelected(type: string): void {
+    this.design.chartType = type;
+    this.applyChartSelection();
+  }
 
 
   ngOnChanges(changes: SimpleChanges): void {
