@@ -18,14 +18,20 @@
 
 
 <div class="data-picker-modal" *ngIf="selectedWidgetType==='widget'">
-  <div class="data-picker-content">
+  <div class="data-picker-content" *ngIf="design.chartType !== 'Analog' && design.chartType !== 'Digital'">
     <div class="widget-option" (click)="clockSelected('Analog')">
       Analog Clock
     </div>
     <div class="widget-option" (click)="clockSelected('Digital')">
       Digital Clock
     </div>
-    <div *ngIf=""></div>
+    <div class="data-picker-content"></div>
+    <div *ngIf="design.chartType==='Analog' || design.chartType==='Digital'">
+      <div class="widget-option" *ngIf="design.chartType==='Analog'">
+        <!-- analog clock component -->
+         optins related to analog clock
+      </div>
+    </div>
   </div>
 </div>
 <div class="data-picker-modal" *ngIf="selectedWidgetType==='single-stat' || selectedWidgetType==='multi-stat'">

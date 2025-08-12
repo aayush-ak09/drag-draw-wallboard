@@ -17,77 +17,174 @@ export class Layouts {
       description: 'A single, large stat block for a key metric.',
       widgets: [
         {
-          x: 0,
-          y: 0,
-          w: 6,
-          h: 4,
-          chartType: 'text',
-          style: {
-            bgColor: '#f0f4f8',
-            textColor: '#000000',
-            textAlign: 'center',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '1.5em'
-          },
-          config: {
-            stats: [['Revenue', '$1.2M']],
-            layoutDirection: 'row'
-          }
-        }
-      ]
-    },
-    {
-      name: 'Two Column Stats',
-      description: 'Two columns of stats for comparison.',
-      widgets: [
-        {
-          x: 0,
-          y: 0,
-          w: 3,
-          h: 4,
-          chartType: 'text',
-          style: {
-            bgColor: '#e8f0fe',
-            textColor: '#000000',
-            textAlign: 'center',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '1.2em'
-          },
-          config: {
-            stats: [
-              ['Users', '5,432'],
-              ['New Signups', '120']
-            ],
-            layoutDirection: 'column'
+          "x": 0,
+          "y": 0,
+          "w": 4,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
           }
         },
         {
-          x: 3,
-          y: 0,
-          w: 3,
-          h: 4,
-          chartType: 'text',
-          style: {
-            bgColor: '#f4e8fe',
-            textColor: '#000000',
-            textAlign: 'center',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '1.2em'
-          },
-          config: {
-            stats: [
-              ['Bounce Rate', '45%'],
-              ['Conversion', '3.2%']
-            ],
-            layoutDirection: 'column'
+          "x": 4,
+          "y": 0,
+          "w": 4,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 8,
+          "y": 0,
+          "w": 4,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 12,
+          "y": 0,
+          "w": 4,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 16,
+          "y": 0,
+          "w": 14,
+          "h": 8,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 30,
+          "y": 0,
+          "w": 18,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 16,
+          "y": 8,
+          "w": 14,
+          "h": 8,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 16,
+          "y": 16,
+          "w": 14,
+          "h": 8,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 0,
+          "y": 24,
+          "w": 16,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 16,
+          "y": 24,
+          "w": 14,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
+          }
+        },
+        {
+          "x": 30,
+          "y": 24,
+          "w": 18,
+          "h": 24,
+          "chartType": "text",
+          "config": {},
+          "style": {
+            "bgColor": "rgb(233, 233, 233)",
+            "textColor": "rgb(0, 0, 0)",
+            "textAlign": "start",
+            "fontFamily": "\"Times New Roman\"",
+            "fontSize": "16px"
           }
         }
       ]
-    },
-    // Add more predefined layouts as needed
+    }
   ];
-
-  constructor() { }
+    constructor() { }
 
   getPredefinedLayouts(): PredefinedLayout[] {
     return this.predefinedLayouts;
